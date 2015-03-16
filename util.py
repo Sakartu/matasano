@@ -1,4 +1,5 @@
 from collections import defaultdict
+from itertools import cycle
 import math
 from operator import itemgetter
 import string
@@ -11,13 +12,14 @@ FREQUENCIES = {
     }
 
 
-def single_char_xor_decrypt(msg, freq=FREQUENCIES):
+def single_char_xor_decrypt(msg, freq=FREQUENCIES, ignore_non_printable=True):
     result_freq = defaultdict(dict)
     for key in range(255):
         result = ''.join(chr(x ^ key) for x in msg)
 
         # Discard results with non-printable characters
-        if any(x not in string.printable for x in result):
+        if any(x not in string.printable for x in result) and ignore_non_printable:
+            print('{0} of {1} chars were unprintable!'.format(sum(x not in string.printable for x in result), len(msg)))
             continue
 
         for c in FREQUENCIES:
@@ -42,3 +44,11 @@ def bhattacharyya_distance(d1, d2):
     for k in d1:
         d += math.sqrt((d1[k] / 100.0) * (d2[k] / 100.0))
     return d
+
+
+def repeating_xor_decrypt(key, msg):
+    repeating_key = cycle(key)
+    result = ''
+    for k, c in zip(repeating_key, msg):
+        result += chr(ord(k) ^ ord(c)) # {:x}'.format(ord(k) ^ ord(c))
+    return result

@@ -4,20 +4,17 @@
 Usage:
 repeating_xor.py KEY MSG...
 """
-from itertools import cycle
-
 from docopt import docopt
+import util
 
 __author__ = 'peter'
 
 
 def main():
     args = docopt(__doc__)
-    repeating_key = cycle(args['KEY'])
     for m in args['MSG']:
-        result = ''
-        for k, c in zip(repeating_key, m):
-            result += '{:x}'.format(ord(k) ^ ord(c))
+        result = util.repeating_xor_decrypt(args['KEY'], m)
+        result = ''.join('{:02x}'.format(ord(x)) for x in result)
         print('{0}: {1}'.format(m, result))
 
 
