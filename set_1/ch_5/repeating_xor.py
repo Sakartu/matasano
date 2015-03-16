@@ -5,7 +5,6 @@ Usage:
 repeating_xor.py KEY MSG...
 """
 from itertools import cycle
-import binascii
 
 from docopt import docopt
 
