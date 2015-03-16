@@ -1,8 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
+"""
+Usage:
+single_byte_xor.py MSG...
+"""
 from collections import defaultdict
+from operator import itemgetter
 import string
 import math
+from docopt import docopt
 from veryprettytable import VeryPrettyTable
 
 __author__ = 'peter'
@@ -28,8 +34,8 @@ def distance(d1, d2):
     return d
 
 
-def main():
-    msg = bytearray.fromhex('1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736')
+def detect_msg(msg):
+    msg = bytearray.fromhex(msg)
     result_freq = defaultdict(dict)
     for key in range(255):
         result = ''.join(chr(x ^ key) for x in msg)
@@ -45,13 +51,18 @@ def main():
         d = distance(FREQUENCIES, result_freq[key])
         result_freq[key]['dist'] = d
 
-    results = sorted(result_freq, key=lambda k: result_freq[k]['dist'], reverse=True)
+    return sorted([(chr(k), result_freq[k]['dist'], result_freq[k]['result']) for k in result_freq], key=itemgetter(1), reverse=True)
 
-    t = VeryPrettyTable(field_names=('chr', 'coefficient', 'decrypted'))
-    t.align = 'l'
-    for k in results:
-        t.add_row((chr(k), result_freq[k]['dist'], repr(result_freq[k]['result'])))
-    print(t.get_string())
+
+def main():
+    args = docopt(__doc__)
+    for m in args['MSG']:
+        t = VeryPrettyTable(field_names=('chr', 'coefficient', 'decrypted'))
+        t.align = 'l'
+        result = detect_msg(m)
+        for c, d, r in result:
+            t.add_row((c, d, repr(r)))
+        print(t.get_string())
 
 
 if __name__ == '__main__':
