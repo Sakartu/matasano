@@ -11,7 +11,6 @@ import util
 __author__ = 'peter'
 
 
-
 def main():
     args = docopt(__doc__)
     for m in args['MSG']:

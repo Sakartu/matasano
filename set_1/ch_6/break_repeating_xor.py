@@ -9,6 +9,7 @@ Options:
 import base64
 
 from docopt import docopt
+import util
 
 __author__ = 'peter'
 
@@ -44,8 +45,17 @@ def main():
         print('Length of the chunklist is {0}'.format(len(pieces)))
         transposed = list(zip(*pieces))
         print('Length of the transposed list is {0}'.format(len(transposed)))
+        key = ''
         for block in transposed:
-            solve_single
+            result = util.single_char_xor_decrypt(block)
+            if not result:
+                continue
+            c, d, r = result[0]
+            key += c
+        print(key)
+
+
+
 
 
 
