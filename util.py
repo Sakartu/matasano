@@ -11,7 +11,7 @@ FREQUENCIES = {
     }
 
 
-def decrypt_single_xor_msg(msg):
+def decrypt_single_xor_msg(msg, freq=FREQUENCIES):
     msg = bytearray.fromhex(msg)
     result_freq = defaultdict(dict)
     for key in range(255):
@@ -25,7 +25,7 @@ def decrypt_single_xor_msg(msg):
             result_freq[key][c] = result.upper().count(c) / float(len(result))
 
         result_freq[key]['result'] = result
-        d = bhattacharyya_distance(FREQUENCIES, result_freq[key])
+        d = bhattacharyya_distance(freq, result_freq[key])
         result_freq[key]['dist'] = d
 
     return sorted([(chr(k), result_freq[k]['dist'], result_freq[k]['result']) for k in result_freq], key=itemgetter(1), reverse=True)
