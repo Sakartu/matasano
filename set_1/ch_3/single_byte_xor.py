@@ -2,6 +2,7 @@
 # -*- coding: utf8 -*-
 from collections import defaultdict
 import string
+import math
 
 __author__ = 'peter'
 
@@ -13,9 +14,16 @@ FREQUENCIES = {
 
 
 def distance(d1, d2):
-    d = 0
+    """
+    Calculate the Bhattacharyya coefficient for the two given frequency dicts. Assumes all keys in d1 are also in d2.
+    A higher coefficient means that both dicts are more equal.
+    :param d1: The first frequency dict to compare. Comparision is made on keys from this dict.
+    :param d2: The second frequency dict to compare.
+    :return: The Bhattacharyya coefficient for the two given frequency dicts, higher is better.
+    """
+    d = 0.0
     for k in d1:
-        d += abs(d1[k] - d2[k])
+        d += math.sqrt((d1[k] / 100.0) * (d2[k] / 100.0))
     return d
 
 
@@ -36,7 +44,7 @@ def main():
         d = distance(FREQUENCIES, result_freq[key])
         result_freq[key]['dist'] = d
 
-    results = sorted(result_freq, key=lambda k: result_freq[k]['dist'])
+    results = sorted(result_freq, key=lambda k: result_freq[k]['dist'], reverse=True)
 
     for k in results:
         print(chr(k), result_freq[k]['dist'], result_freq[k]['result'])
