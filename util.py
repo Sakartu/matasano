@@ -50,5 +50,5 @@ def repeating_xor_decrypt(key, msg):
     repeating_key = cycle(key)
     result = ''
     for k, c in zip(repeating_key, msg):
-        result += chr(ord(k) ^ ord(c)) # {:x}'.format(ord(k) ^ ord(c))
+        result += chr(ord(k) ^ c)
     return result

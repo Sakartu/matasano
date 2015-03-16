@@ -13,7 +13,7 @@ __author__ = 'peter'
 def main():
     args = docopt(__doc__)
     for m in args['MSG']:
-        result = util.repeating_xor_decrypt(args['KEY'], m)
+        result = util.repeating_xor_decrypt(args['KEY'], bytearray(m))
         result = ''.join('{:02x}'.format(ord(x)) for x in result)
         print('{0}: {1}'.format(m, result))
 
