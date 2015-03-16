@@ -1,16 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
-"""
-Usage:
-single_byte_xor.py
-
-Options:
-"""
-import binascii
 from collections import defaultdict
 import string
-
-from docopt import docopt
 
 __author__ = 'peter'
 
@@ -29,11 +20,8 @@ def distance(d1, d2):
 
 
 def main():
-    args = docopt(__doc__)
     msg = bytearray.fromhex('1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736')
     result_freq = defaultdict(dict)
-    best_key = 1
-    best_dist = 100
     for key in range(255):
         result = ''.join(chr(x ^ key) for x in msg)
 
@@ -47,18 +35,11 @@ def main():
         result_freq[key]['result'] = result
         d = distance(FREQUENCIES, result_freq[key])
         result_freq[key]['dist'] = d
-        if d < best_dist:
-            best_key = key
-            best_dist = d
 
-    for k in result_freq:
+    results = sorted(result_freq, key=lambda k: result_freq[k]['dist'])
+
+    for k in results:
         print(chr(k), result_freq[k]['dist'], result_freq[k]['result'])
-    # print(chr(best_key))
-    # print(result_freq[best_key]['result'])
-
-
-
-
 
 
 if __name__ == '__main__':
