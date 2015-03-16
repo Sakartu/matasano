@@ -17,7 +17,7 @@ def main():
     for m in args['MSG']:
         t = VeryPrettyTable(field_names=('chr', 'coefficient', 'decrypted'))
         t.align = 'l'
-        result = util.decrypt_single_xor_msg(m)
+        result = util.single_char_xor_decrypt(m)
         for c, d, r in result:
             t.add_row((c, d, repr(r)))
         print(t.get_string())

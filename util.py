@@ -11,7 +11,7 @@ FREQUENCIES = {
     }
 
 
-def decrypt_single_xor_msg(msg, freq=FREQUENCIES):
+def single_char_xor_decrypt(msg, freq=FREQUENCIES):
     msg = bytearray.fromhex(msg)
     result_freq = defaultdict(dict)
     for key in range(255):
