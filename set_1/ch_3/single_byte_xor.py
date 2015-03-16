@@ -20,7 +20,7 @@ FREQUENCIES = {
 }
 
 
-def distance(d1, d2):
+def bhattacharyya_distance(d1, d2):
     """
     Calculate the Bhattacharyya coefficient for the two given frequency dicts. Assumes all keys in d1 are also in d2.
     A higher coefficient means that both dicts are more equal.
@@ -48,7 +48,7 @@ def detect_msg(msg):
             result_freq[key][c] = result.upper().count(c) / float(len(result))
 
         result_freq[key]['result'] = result
-        d = distance(FREQUENCIES, result_freq[key])
+        d = bhattacharyya_distance(FREQUENCIES, result_freq[key])
         result_freq[key]['dist'] = d
 
     return sorted([(chr(k), result_freq[k]['dist'], result_freq[k]['result']) for k in result_freq], key=itemgetter(1), reverse=True)
