@@ -3,13 +3,14 @@
 from collections import defaultdict
 import string
 import math
+from veryprettytable import VeryPrettyTable
 
 __author__ = 'peter'
 
 FREQUENCIES = {
-    'E': 12.02, 'T': 9.10, 'A': 8.12, 'O': 7.68, 'I': 7.31, 'N': 6.95, 'S': 6.28, 'R': 6.02, 'H': 5.92, 'D': 4.32,
-    'L': 3.98, 'U': 2.88, 'C': 2.71, 'M': 2.61, 'F': 2.30, 'Y': 2.11, 'W': 2.09, 'G': 2.03, 'P': 1.82, 'B': 1.49,
-    'V': 1.11, 'K': 0.69, 'X': 0.17, 'Q': 0.11, 'J': 0.10, 'Z': 0.07,
+    'A': 0.0812, 'B': 0.0149, 'C': 0.0271, 'D': 0.0432, 'E': 0.1202, 'F': 0.023, 'G': 0.0203, 'H': 0.0592, 'I': 0.0731,
+    'J': 0.001, 'K': 0.0069, 'L': 0.0398, 'M': 0.0261, 'N': 0.0695, 'O': 0.0768, 'P': 0.0182, 'Q': 0.0011, 'R': 0.0602,
+    'S': 0.0628, 'T': 0.091, 'U': 0.0288, 'V': 0.0111, 'W': 0.0209, 'X': 0.0017, 'Y': 0.0211, 'Z': 0.0007,
 }
 
 
@@ -38,7 +39,7 @@ def main():
             continue
 
         for c in FREQUENCIES:
-            result_freq[key][c] = result.upper().count(c) / float(len(result)) * 100.0
+            result_freq[key][c] = result.upper().count(c) / float(len(result))
 
         result_freq[key]['result'] = result
         d = distance(FREQUENCIES, result_freq[key])
@@ -46,8 +47,11 @@ def main():
 
     results = sorted(result_freq, key=lambda k: result_freq[k]['dist'], reverse=True)
 
+    t = VeryPrettyTable(field_names=('chr', 'coefficient', 'decrypted'))
+    t.align = 'l'
     for k in results:
-        print(chr(k), result_freq[k]['dist'], result_freq[k]['result'])
+        t.add_row((chr(k), result_freq[k]['dist'], repr(result_freq[k]['result'])))
+    print(t.get_string())
 
 
 if __name__ == '__main__':
