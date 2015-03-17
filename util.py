@@ -82,4 +82,4 @@ def pkcs7_pad(data, block_size=16):
 
 
 def fixed_xor(ba1, ba2):
-    return bytearray(b1 ^ b2 for b1, b2 in zip(ba1, ba2))
+    return bytes(b1 ^ b2 for b1, b2 in zip(ba1, ba2))
