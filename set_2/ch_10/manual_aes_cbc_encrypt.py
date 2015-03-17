@@ -28,7 +28,7 @@ def main():
         to_encrypt = util.fixed_xor(b, prev_ciph)
         prev_ciph = util.aes_ecb_encrypt(to_encrypt, key)
         ct += prev_ciph
-    print(repr(ct))
+    print(base64.b64encode(ct))
 
 
 if __name__ == '__main__':
