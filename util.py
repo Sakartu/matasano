@@ -3,6 +3,7 @@ from itertools import cycle
 import math
 from operator import itemgetter
 import string
+from Crypto.Cipher import AES
 
 
 FREQUENCIES = {
@@ -62,6 +63,14 @@ def chunks(l, n, num=None):
         yield l[i:i+n]
         if num is not None and idx == num:
             return
+
+
+def aes_ecb_encrypt(data, key):
+    return AES.new(key, AES.MODE_ECB).encrypt(data)
+
+
+def aes_ecb_decrypt(data, key):
+    return AES.new(key, AES.MODE_ECB).decrypt(data)
 
 
 def pkcs7_pad(data, block_size=16):

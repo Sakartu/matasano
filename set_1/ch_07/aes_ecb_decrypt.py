@@ -10,6 +10,7 @@ import base64
 
 from docopt import docopt
 from Crypto.Cipher import AES
+import util
 
 __author__ = 'peter'
 
@@ -18,9 +19,7 @@ def main():
     args = docopt(__doc__)
     data = base64.b64decode(''.join(x for x in open(args['INFILE'])))
     key = args['KEY']
-    aes = AES.new(key, AES.MODE_ECB)
-    result = aes.decrypt(data)
-    print(result)
+    print(util.aes_ecb_decrypt(data, key))
 
 
 if __name__ == '__main__':
