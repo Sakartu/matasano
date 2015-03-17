@@ -12,13 +12,13 @@ FREQUENCIES = {
     }
 
 
-def single_char_xor_decrypt(msg, freq=FREQUENCIES, ignore_non_printable=True):
+def single_char_xor_decrypt(msg, freq=FREQUENCIES, filter_non_printable=True):
     result_freq = defaultdict(dict)
     for key in range(255):
         result = ''.join(chr(x ^ key) for x in msg)
 
         # Discard results with non-printable characters
-        if any(x not in string.printable for x in result) and ignore_non_printable:
+        if filter_non_printable and any(x not in string.printable for x in result):
             continue
 
         for c in FREQUENCIES:
