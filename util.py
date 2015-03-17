@@ -53,3 +53,12 @@ def repeating_xor_decrypt(key, msg):
     for k, c in zip(repeating_key, msg):
         result += chr(ord(k) ^ c)
     return result
+
+
+def chunks(l, n, num=None):
+    """ Yield successive n-sized chunks from l. If num is an integer, yield max num results.
+    """
+    for idx, i in enumerate(range(0, len(l), n)):
+        yield l[i:i+n]
+        if num is not None and idx == num:
+            return

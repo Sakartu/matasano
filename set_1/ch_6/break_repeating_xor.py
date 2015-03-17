@@ -8,11 +8,12 @@ Options:
 """
 import base64
 import os
-import binascii
 import string
 
 from docopt import docopt
+
 import util
+
 
 __author__ = 'peter'
 
@@ -37,15 +38,6 @@ def hamming_distance(cs):
     return d / end
 
 
-def chunks(l, n, num=None):
-    """ Yield successive n-sized chunks from l. If num is an integer, yield max num results.
-    """
-    for idx, i in enumerate(range(0, len(l), n)):
-        yield l[i:i+n]
-        if num is not None and idx == num:
-            return
-
-
 def main():
     args = docopt(__doc__)
     data = base64.b64decode(''.join(x for x in open(args['INFILE'])).strip())
@@ -53,14 +45,14 @@ def main():
     candidates = []
     # Find best matching keysizes
     for keysize in range(2, 40):
-        cs = tuple(chunks(data, keysize, 4))
+        cs = tuple(util.chunks(data, keysize, 4))
         dist = hamming_distance(cs) / float(keysize)
         candidates.append((keysize, dist))
     best = sorted(candidates, key=lambda x: x[1])
     print('Best keysizes (with distances) are: {0}'.format(best))
     decrypted = []
     for keysize, _ in best[:5]:
-        pieces = list(chunks(data, keysize))
+        pieces = list(util.chunks(data, keysize))
         pieces = pieces[:-1]  # Remove last piece, as this probably isn't full length
         print('Length of the chunklist is {0}'.format(len(pieces)))
         transposed = list(zip(*pieces))
