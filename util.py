@@ -62,3 +62,11 @@ def chunks(l, n, num=None):
         yield l[i:i+n]
         if num is not None and idx == num:
             return
+
+
+def pkcs7_pad(data, block_size=16):
+    if len(data) < block_size:
+        count = block_size - len(data)
+    else:
+        count = len(data) % block_size or block_size
+    return data + (count.to_bytes(1, 'big') * count)
