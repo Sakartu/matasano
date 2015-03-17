@@ -17,12 +17,14 @@ def single_char_xor_decrypt(msg, freq=FREQUENCIES, filter_non_printable=True):
     for key in range(255):
         result = ''.join(chr(x ^ key) for x in msg)
 
-        # Discard results with non-printable characters
+        # Discard results with non-printable characters if applicable
         if filter_non_printable and any(x not in string.printable for x in result):
             continue
 
         for c in FREQUENCIES:
-            result_freq[key][c] = result.upper().count(c) / float(len(result))
+            # Take non-printability into account. Add 1 so we never get a division by zero.
+            non_print_compensation = sum(x not in string.printable for x in result) + 1
+            result_freq[key][c] = result.upper().count(c) / float(len(result)) / non_print_compensation
 
         result_freq[key]['result'] = result
         d = bhattacharyya_distance(freq, result_freq[key])
