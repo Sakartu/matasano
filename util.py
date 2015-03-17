@@ -19,7 +19,6 @@ def single_char_xor_decrypt(msg, freq=FREQUENCIES, ignore_non_printable=True):
 
         # Discard results with non-printable characters
         if any(x not in string.printable for x in result) and ignore_non_printable:
-            print('{0} of {1} chars were unprintable!'.format(sum(x not in string.printable for x in result), len(msg)))
             continue
 
         for c in FREQUENCIES:
