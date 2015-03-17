@@ -3,6 +3,7 @@ from itertools import cycle
 import math
 from operator import itemgetter
 import string
+from Crypto import Random
 from Crypto.Cipher import AES
 
 
@@ -83,3 +84,7 @@ def pkcs7_pad(data, block_size=16):
 
 def fixed_xor(ba1, ba2):
     return bytes(b1 ^ b2 for b1, b2 in zip(ba1, ba2))
+
+
+def get_random_key(length=16):
+    return Random.new().read(length)
