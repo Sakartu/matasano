@@ -16,7 +16,7 @@ __author__ = 'peter'
 
 def main():
     args = docopt(__doc__)
-    ct = bytes(args['MSG'], encoding='utf8')
+    ct = base64.b64decode(args['MSG'])
     key = bytes(args['KEY'], encoding='utf8')
     print('Data is {0} bytes long, last block is {1} bytes'.format(len(ct), len(ct) % 16 or 16))
     prev_ciph = b'\x00' * 16
