@@ -9,7 +9,6 @@ Options:
 import random
 import binascii
 
-from docopt import docopt
 import util
 
 __author__ = 'peter'
