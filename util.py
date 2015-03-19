@@ -170,3 +170,16 @@ def detect_ecb_or_cbc(ct):
         return AES.MODE_ECB
     else:
         return AES.MODE_CBC
+
+
+def detect_blocksize(cipher):
+    blocksize = 0
+    for i in range(1, 512):
+        ct = cipher(b'A'*i)
+        if not blocksize:
+            blocksize = len(ct)
+        else:
+            if len(ct) != blocksize:
+                blocksize = len(ct) - blocksize
+                break
+    return blocksize
