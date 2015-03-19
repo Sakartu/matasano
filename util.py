@@ -185,9 +185,26 @@ def detect_blocksize(cipher):
     return blocksize
 
 
-def parse_cookie(cookie):
-    result = {}
-    for part in cookie.split('&'):
-        k, v = part.split('=')
-        result[k] = v
-    return result
+class Profile():
+    def __init__(self, email):
+        self.email = email
+        self.uid = 10
+        self.role = 'user'
+
+    def encode(self):
+        return '&'.join('{0}={1}'.format(k, getattr(self, k)) for k in ('email', 'uid', 'role'))
+
+
+    @staticmethod
+    def parse_cookie(cookie):
+        result = {}
+        for part in cookie.split('&'):
+            k, v = part.split('=')
+            result[k] = v
+        return result
+
+
+    @staticmethod
+    def profile_for(email):
+        email = email.translate(str.maketrans('', '', '&='))
+        return Profile(email)
