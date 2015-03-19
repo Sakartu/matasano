@@ -49,7 +49,7 @@ def main():
             try:
                 secret += d[list(util.chunks(ct, blocksize))[num_block]]
             except KeyError:
-                print(len(secret))
+                # We are done or we didn't find a match (when we occur padding)
                 break
     print(len(secret), secret)
     print(len(EXTRA_MSG), EXTRA_MSG)
