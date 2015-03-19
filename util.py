@@ -123,7 +123,18 @@ def encryption_oracle(data):
     app_count = random.randint(5, 10)
     data = get_random_bytes(pre_count) + data + get_random_bytes(app_count)
     if random.getrandbits(1):
-
-        pass
+        return aes_cbc_encrypt(data, key, get_random_bytes(16))
     else:
-        pass
+        return aes_ecb_encrypt(data, key)
+
+
+def detect_ecb(ct):
+    cs = list(chunks(ct, 16))
+    return len(set(cs)) != len(cs)
+
+
+def detect_ecb_or_cbc(ct):
+    if detect_ecb(ct):
+        return AES.MODE_ECB
+    else:
+        return AES.MODE_CBC
