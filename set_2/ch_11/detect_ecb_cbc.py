@@ -20,7 +20,7 @@ modes = {
 
 
 def main():
-    print('detect', 'real')
+    print('det', 'rel', 'match')
     for i in range(1000):
         plain = b'A' * 1000
         real_mode, ct = util.encryption_oracle(plain)
