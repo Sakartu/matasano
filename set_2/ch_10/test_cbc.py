@@ -16,7 +16,7 @@ __author__ = 'peter'
 
 def main():
     for _ in range(10000):
-        pt = util.get_random_bytes(random.randint(100, 1000))
+        pt = util.get_random_bytes(random.randint(2, 16))
         key = util.get_random_bytes(16)
         iv = util.get_random_bytes(16)
         ct = util.aes_cbc_encrypt(pt, key, iv)

@@ -68,12 +68,15 @@ def chunks(l, n, num=None):
             return
 
 
-def aes_ecb_encrypt(data, key):
-    return AES.new(key, AES.MODE_ECB).encrypt(pkcs7_pad(data))
+def aes_ecb_encrypt(data, key, pad=True):
+    if pad:
+        data = pkcs7_pad(data)
+    return AES.new(key, AES.MODE_ECB).encrypt(data)
 
 
-def aes_ecb_decrypt(data, key):
-    return AES.new(key, AES.MODE_ECB).decrypt(pkcs7_depad(data))
+def aes_ecb_decrypt(data, key, depad=True):
+    r = AES.new(key, AES.MODE_ECB).decrypt(data)
+    return pkcs7_depad(r) if depad else r
 
 
 def pkcs7_pad(data, block_size=16):
@@ -91,31 +94,41 @@ def fixed_xor(ba1, ba2):
     return bytes(b1 ^ b2 for b1, b2 in zip(ba1, ba2))
 
 
-def aes_cbc_decrypt(ct, key, iv=b'\x00'*16):
+def aes_cbc_decrypt(ct, key, iv=b'\x00'*16, verbose=False):
+    if verbose:
+        print('d, len(ct):', len(ct))
     blocks = list(chunks(ct, 16))
+    if verbose:
+        print('d, # blocks:', len(blocks))
     result = b''
     for b in blocks:
-        decrypted = aes_ecb_decrypt(b, key)
+        decrypted = aes_ecb_decrypt(b, key, depad=False)
         result += fixed_xor(decrypted, iv)
         iv = b
+    if verbose:
+        print('d, len(pt):', len(result))
     return pkcs7_depad(result)
 
 
 def aes_cbc_encrypt(data, key, iv=b'\x00'*16, verbose=False):
     if verbose:
-        print('len(data):', len(data))
+        print('e, len(data):', len(data))
     data = pkcs7_pad(data)
     if verbose:
-        print('len(data) + pad:', len(data))
+        print('e, len(data) + pad:', len(data))
     blocks = list(chunks(data, 16))
     if verbose:
-        print('# blocks:', len(blocks))
+        print('e, # blocks:', len(blocks))
     ct = b''
     for b in blocks:
         to_encrypt = fixed_xor(b, iv)
-        prev_ciph = aes_ecb_encrypt(to_encrypt, key)
+        prev_ciph = aes_ecb_encrypt(to_encrypt, key, pad=False)
+        if verbose:
+            print('e, len(enc_block):', len(prev_ciph))
         ct += prev_ciph
         iv = prev_ciph
+    if verbose:
+        print('e, len(ct):', len(ct))
     return ct
 
 
@@ -129,10 +142,12 @@ def encryption_oracle(data):
     app_count = random.randint(5, 10)
     data = get_random_bytes(pre_count) + data + get_random_bytes(app_count)
     if random.getrandbits(1):
-        return AES.MODE_CBC, aes_cbc_encrypt(data, key, get_random_bytes(16))
+        ct = aes_cbc_encrypt(data, key, get_random_bytes(16))
+        mode = AES.MODE_CBC
     else:
-        data = pkcs7_pad(data)
-        return AES.MODE_ECB, aes_ecb_encrypt(pkcs7_pad(data), key)
+        ct = aes_ecb_encrypt(data, key)
+        mode = AES.MODE_ECB
+    return mode, ct
 
 
 def detect_ecb(ct):
