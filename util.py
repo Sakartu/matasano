@@ -76,11 +76,10 @@ def aes_ecb_decrypt(data, key):
 
 
 def pkcs7_pad(data, block_size=16):
-    if len(data) < block_size:
-        count = block_size - len(data)
-    else:
-        count = len(data) % block_size or block_size
-    return data + (count.to_bytes(1, 'big') * count)
+    l = len(data)
+    count = block_size - (l % block_size)
+    assert (l + count) % block_size == 0
+    return bytes(data) + bytes(count.to_bytes(1, 'big') * count)
 
 
 def pkcs7_depad(data):
@@ -123,9 +122,10 @@ def encryption_oracle(data):
     app_count = random.randint(5, 10)
     data = get_random_bytes(pre_count) + data + get_random_bytes(app_count)
     if random.getrandbits(1):
-        return aes_cbc_encrypt(data, key, get_random_bytes(16))
+        return AES.MODE_CBC, aes_cbc_encrypt(data, key, get_random_bytes(16))
     else:
-        return aes_ecb_encrypt(data, key)
+        data = pkcs7_pad(data)
+        return AES.MODE_ECB, aes_ecb_encrypt(pkcs7_pad(data), key)
 
 
 def detect_ecb(ct):
