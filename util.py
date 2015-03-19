@@ -91,9 +91,39 @@ def fixed_xor(ba1, ba2):
     return bytes(b1 ^ b2 for b1, b2 in zip(ba1, ba2))
 
 
-def get_random_key(length=16):
+def aes_cbc_decrypt(ct, key, iv=b'\x00'*16):
+    blocks = list(chunks(ct, 16))
+    result = b''
+    for b in blocks:
+        decrypted = aes_ecb_decrypt(b, key)
+        result += fixed_xor(decrypted, iv)
+        iv = b
+    return result
+
+
+def aes_cbc_encrypt(data, key, iv=b'\x00'*16):
+    blocks = list(chunks(data, 16))
+    # Pad last block
+    blocks = blocks[:-1] + list(chunks(pkcs7_pad(blocks[-1]), 16))
+    ct = b''
+    for b in blocks:
+        to_encrypt = fixed_xor(b, iv)
+        prev_ciph = aes_ecb_encrypt(to_encrypt, key)
+        ct += prev_ciph
+    return ct
+
+
+def get_random_bytes(length=1):
     return Random.new().read(length)
 
 
 def encryption_oracle(data):
-    count = random.randint()
+    key = get_random_bytes(16)
+    pre_count = random.randint(5, 10)
+    app_count = random.randint(5, 10)
+    data = get_random_bytes(pre_count) + data + get_random_bytes(app_count)
+    if random.getrandbits(1):
+
+        pass
+    else:
+        pass
