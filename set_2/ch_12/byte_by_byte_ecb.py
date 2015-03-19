@@ -48,7 +48,7 @@ def main():
             ct = cipher(basemsg)
             try:
                 secret += d[list(util.chunks(ct, blocksize))[num_block]]
-            except:
+            except KeyError:
                 print(len(secret))
                 break
     print(len(secret), secret)
