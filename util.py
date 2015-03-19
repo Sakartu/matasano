@@ -136,17 +136,15 @@ def get_random_bytes(length=1):
     return Random.new().read(length)
 
 
-def encryption_oracle(data):
-    key = get_random_bytes(16)
+def encryption_oracle(data, key=get_random_bytes(16), mode=None):
     pre_count = random.randint(5, 10)
     app_count = random.randint(5, 10)
     data = get_random_bytes(pre_count) + data + get_random_bytes(app_count)
-    if random.getrandbits(1):
+    mode = mode or random.choice((AES.MODE_CBC, AES.MODE_ECB))
+    if mode == AES.MODE_CBC:
         ct = aes_cbc_encrypt(data, key, get_random_bytes(16))
-        mode = AES.MODE_CBC
     else:
         ct = aes_ecb_encrypt(data, key)
-        mode = AES.MODE_ECB
     return mode, ct
 
 
