@@ -6,6 +6,7 @@ import random
 import string
 from Crypto import Random
 from Crypto.Cipher import AES
+import binascii
 
 
 FREQUENCIES = {
@@ -68,11 +69,11 @@ def chunks(l, n, num=None):
 
 
 def aes_ecb_encrypt(data, key):
-    return AES.new(key, AES.MODE_ECB).encrypt(data)
+    return AES.new(key, AES.MODE_ECB).encrypt(pkcs7_pad(data))
 
 
 def aes_ecb_decrypt(data, key):
-    return AES.new(key, AES.MODE_ECB).decrypt(data)
+    return AES.new(key, AES.MODE_ECB).decrypt(pkcs7_depad(data))
 
 
 def pkcs7_pad(data, block_size=16):
@@ -97,18 +98,24 @@ def aes_cbc_decrypt(ct, key, iv=b'\x00'*16):
         decrypted = aes_ecb_decrypt(b, key)
         result += fixed_xor(decrypted, iv)
         iv = b
-    return result
+    return pkcs7_depad(result)
 
 
-def aes_cbc_encrypt(data, key, iv=b'\x00'*16):
+def aes_cbc_encrypt(data, key, iv=b'\x00'*16, verbose=False):
+    if verbose:
+        print('len(data):', len(data))
+    data = pkcs7_pad(data)
+    if verbose:
+        print('len(data) + pad:', len(data))
     blocks = list(chunks(data, 16))
-    # Pad last block
-    blocks = blocks[:-1] + list(chunks(pkcs7_pad(blocks[-1]), 16))
+    if verbose:
+        print('# blocks:', len(blocks))
     ct = b''
     for b in blocks:
         to_encrypt = fixed_xor(b, iv)
         prev_ciph = aes_ecb_encrypt(to_encrypt, key)
         ct += prev_ciph
+        iv = prev_ciph
     return ct
 
 
