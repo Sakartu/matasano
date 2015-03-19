@@ -183,3 +183,11 @@ def detect_blocksize(cipher):
                 blocksize = len(ct) - blocksize
                 break
     return blocksize
+
+
+def parse_cookie(cookie):
+    result = {}
+    for part in cookie.split('&'):
+        k, v = part.split('=')
+        result[k] = v
+    return result

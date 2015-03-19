@@ -37,7 +37,7 @@ def main():
     secret = b''
     num_blocks = int(len(cipher(b'')) / blocksize)
     for num_block in range(num_blocks):
-        for num_byte in range(0, blocksize):
+        for num_byte in range(blocksize):
             basemsg = b'A' * (blocksize - num_byte - 1)
             d = {}
             for i in range(255):
