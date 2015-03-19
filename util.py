@@ -6,7 +6,6 @@ import random
 import string
 from Crypto import Random
 from Crypto.Cipher import AES
-import binascii
 
 
 FREQUENCIES = {
@@ -14,6 +13,9 @@ FREQUENCIES = {
     'J': 0.001, 'K': 0.0069, 'L': 0.0398, 'M': 0.0261, 'N': 0.0695, 'O': 0.0768, 'P': 0.0182, 'Q': 0.0011, 'R': 0.0602,
     'S': 0.0628, 'T': 0.091, 'U': 0.0288, 'V': 0.0111, 'W': 0.0209, 'X': 0.0017, 'Y': 0.0211, 'Z': 0.0007,
     }
+
+
+GLOBAL_KEY = b'\xe0\xa4\thK\x8bcr\x9d\xa5\xd4\x87\xaa\x1f\xe7`'
 
 
 def single_char_xor_decrypt(msg, freq=FREQUENCIES, filter_non_printable=True):
@@ -136,7 +138,7 @@ def get_random_bytes(length=1):
     return Random.new().read(length)
 
 
-def encryption_oracle(data, key=get_random_bytes(16), mode=None):
+def encryption_oracle(data, key=GLOBAL_KEY, mode=None):
     pre_count = random.randint(5, 10)
     app_count = random.randint(5, 10)
     data = get_random_bytes(pre_count) + data + get_random_bytes(app_count)
