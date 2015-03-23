@@ -7,9 +7,7 @@ byte_by_byte_ecb.py
 Options:
 """
 import base64
-import pprint
 from Crypto.Cipher import AES
-import math
 import util
 
 __author__ = 'peter'
