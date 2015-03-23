@@ -186,13 +186,18 @@ def detect_blocksize(cipher):
 
 
 class Profile():
-    def __init__(self, email):
+    def __init__(self, email, role, uid):
         self.email = email
-        self.uid = 10
-        self.role = 'user'
+        self.role = role
+        self.uid = uid
 
     def encode(self):
-        return '&'.join('{0}={1}'.format(k, getattr(self, k)) for k in ('email', 'uid', 'role'))
+        return '&'.join('{0}={1}'.format(k, getattr(self, k)) for k in ('email', 'role', 'uid'))
+
+    def encrypt(self):
+        s = bytes(self.encode(), 'utf8')
+        ct = encryption_oracle(s, mode=AES.MODE_ECB, prepend=b'', append=b'')
+        return ct
 
 
     @staticmethod
@@ -205,6 +210,16 @@ class Profile():
 
 
     @staticmethod
-    def profile_for(email):
+    def profile_for(email, uid=10, role='user'):
         email = email.translate(str.maketrans('', '', '&='))
-        return Profile(email)
+        return Profile(email, role, uid)
+
+
+    @staticmethod
+    def decrypt(ct):
+        pt = aes_ecb_decrypt(ct, GLOBAL_KEY)
+        s = Profile.parse_cookie(pt.decode('utf8'))
+        if 'email' in s:
+            return Profile.profile_for(s['email'])
+        else:
+            raise ValueError('Couldn\'t create profile for {0}'.format(s))
