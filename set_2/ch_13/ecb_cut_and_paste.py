@@ -42,10 +42,14 @@ def main():
     # and the last block of the second cipher, concatenate those, then try to decrypt a profile from that. We use a full
     # block of padding to make sure we don't get problems there.
     first = Profile.profile_for('foo1@bar1.com').encrypt()[:32]  # ct for "email=foo1@bar1.com&uid=10&role=", len 32
-    second = Profile.profile_for('foo@ba.comadmin').encrypt()[16:32]  # ct for 'admin&uid=10&rol'
-    pad = Profile.profile_for('fo@ba.com').encrypt()[-16:]
+    second = Profile.profile_for('foo@ba.comadmin').encrypt()[16:32]  # ct for 'admin&uid=10&rol', len 16
+    pad = Profile.profile_for('fo@ba.com').encrypt()[-16:]  # ct for '\x10' * 16, padding, len 16
     assert util.aes_ecb_decrypt(first + second, util.GLOBAL_KEY, depad=False) == b'email=foo1@bar1.com&uid=10&role=admin&uid=10&rol'
-    print('Forged profile is:', Profile.decrypt(first + second + pad))
+    p = Profile.decrypt(first + second + pad)
+    assert p.role == 'admin'
+    print('Forged profile email:', p.email)
+    print('Forged profile uid:', p.uid)
+    print('Forged profile role:', p.role)
 
 
 if __name__ == '__main__':
