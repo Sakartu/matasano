@@ -89,7 +89,11 @@ def pkcs7_pad(data, block_size=16):
 
 
 def pkcs7_depad(data):
-    return data[:-data[-1]]
+    last = data[-1]
+    if data.endswith(last.to_bytes(1, 'big') * last):
+        return data[:-data[-1]]
+    else:
+        raise ValueError('Padding invalid!')
 
 
 def fixed_xor(ba1, ba2):
