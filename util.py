@@ -135,6 +135,11 @@ def aes_cbc_encrypt(data, key, iv=b'\x00'*16, verbose=False):
 
 
 def get_random_bytes(length=1):
+    """
+    Return length (default 1) random bytes
+    :param length: The number of bytes to return
+    :return: length random bytes
+    """
     return Random.new().read(length)
 
 
@@ -173,16 +178,24 @@ def detect_ecb_or_cbc(ct):
 
 
 def detect_blocksize(cipher):
-    blocksize = 0
-    for i in range(1, 512):
-        ct = cipher(b'A'*i)
-        if not blocksize:
-            blocksize = len(ct)
-        else:
-            if len(ct) != blocksize:
-                blocksize = len(ct) - blocksize
-                break
-    return blocksize
+    # See if cipher is stable
+    stable = True
+    l = len(cipher(b'A'))
+    for i in range(100):
+        stable = stable and len(cipher(b'A')) == l
+
+    if stable:
+        blocksize = 0
+        # for challenge 12
+        for i in range(1, 512):
+            ct = cipher(b'A'*i)
+            if not blocksize:
+                blocksize = len(ct)
+            else:
+                if len(ct) != blocksize:
+                    return len(ct) - blocksize
+    else:
+        raise ValueError('Cipher is unstable, can\'t find blocksize!')
 
 
 class Profile():
@@ -228,3 +241,20 @@ class Profile():
 
     def __repr__(self):
         return str(vars(self))
+
+
+def find_repeating_block(ct, bs, minlen=2):
+    cs = list(chunks(ct, bs))
+    begin = 1
+    blocks = []
+    while begin < len(cs):
+        end = begin
+        for block in cs[begin+1:]:
+            if block == cs[begin]:
+                end += 1
+            else:
+                break
+        if (end - begin) + 1 >= minlen:
+            blocks.append((begin, end))
+        begin = end + 1
+    return blocks
