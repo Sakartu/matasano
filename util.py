@@ -1,3 +1,4 @@
+import base64
 from collections import defaultdict
 from itertools import cycle
 import math
@@ -15,7 +16,7 @@ FREQUENCIES = {
     }
 
 
-GLOBAL_KEY = b'\xe0\xa4\thK\x8bcr\x9d\xa5\xd4\x87\xaa\x1f\xe7`'
+GLOBAL_KEY = Random.new().read(16)
 
 
 def single_char_xor_decrypt(msg, freq=FREQUENCIES, filter_non_printable=True):
@@ -277,3 +278,30 @@ def cbc_enc_ch_16(plain, prepend=None, append=None):
 def cbc_dec_ch_16(ct, check=b';admin=true;'):
     pt = aes_cbc_decrypt(ct, GLOBAL_KEY)
     return check in pt
+
+
+def cbc_enc_ch_17():
+    pt = random.choice([base64.b64decode(s) for s in (
+        'MDAwMDAwTm93IHRoYXQgdGhlIHBhcnR5IGlzIGp1bXBpbmc=',
+        'MDAwMDAxV2l0aCB0aGUgYmFzcyBraWNrZWQgaW4gYW5kIHRoZSBWZWdhJ3MgYXJlIHB1bXBpbic=',
+        'MDAwMDAyUXVpY2sgdG8gdGhlIHBvaW50LCB0byB0aGUgcG9pbnQsIG5vIGZha2luZw==',
+        'MDAwMDAzQ29va2luZyBNQydzIGxpa2UgYSBwb3VuZCBvZiBiYWNvbg==',
+        'MDAwMDA0QnVybmluZyAnZW0sIGlmIHlvdSBhaW4ndCBxdWljayBhbmQgbmltYmxl',
+        'MDAwMDA1SSBnbyBjcmF6eSB3aGVuIEkgaGVhciBhIGN5bWJhbA==',
+        'MDAwMDA2QW5kIGEgaGlnaCBoYXQgd2l0aCBhIHNvdXBlZCB1cCB0ZW1wbw==',
+        'MDAwMDA3SSdtIG9uIGEgcm9sbCwgaXQncyB0aW1lIHRvIGdvIHNvbG8=',
+        'MDAwMDA4b2xsaW4nIGluIG15IGZpdmUgcG9pbnQgb2g=',
+        'MDAwMDA5aXRoIG15IHJhZy10b3AgZG93biBzbyBteSBoYWlyIGNhbiBibG93')
+    ])
+    iv = get_random_bytes(16)
+    return iv, aes_cbc_encrypt(pt, GLOBAL_KEY, iv=iv)
+
+
+def cbc_dec_ch_17(ct, iv):
+    try:
+        aes_cbc_decrypt(ct, GLOBAL_KEY, iv)
+        return True
+    except ValueError:
+        return False
+
+
