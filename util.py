@@ -271,9 +271,9 @@ def cbc_enc_ch_16(plain, prepend=None, append=None):
         append = ";comment2=%20like%20a%20pound%20of%20bacon"
     plain = plain.translate(str.maketrans('', '', ';='))
     plain = prepend + plain + append
-    return aes_cbc_encrypt(plain, GLOBAL_KEY)
+    return aes_cbc_encrypt(bytes(plain, 'utf8'), GLOBAL_KEY)
 
 
-def cbc_dec_ch_16(ct, check=';admin=true;'):
+def cbc_dec_ch_16(ct, check=b';admin=true;'):
     pt = aes_cbc_decrypt(ct, GLOBAL_KEY)
     return check in pt
