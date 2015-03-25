@@ -14,8 +14,8 @@ __author__ = 'peter'
 
 
 def main():
-    cipher = lambda plain: util.cbc_enc_ch_16(plain)
-    decipher = lambda ct: util.cbc_dec_ch_16(ct)
+    cipher = lambda plain: cbc_enc_ch_16(plain)
+    decipher = lambda ct: cbc_dec_ch_16(ct)
 
     # Two plaintext blocks of 16 bytes
     pt = 'aaaaaaaaaaaaaaaa' + '0admin1true2aaaa'
@@ -37,6 +37,21 @@ def main():
         if decipher(tampered):
             print()
             print(ct)
+
+
+def cbc_enc_ch_16(plain, prepend=None, append=None):
+    if prepend is None:
+        prepend = "comment1=cooking%20MCs;userdata="
+    if append is None:
+        append = ";comment2=%20like%20a%20pound%20of%20bacon"
+    plain = plain.translate(str.maketrans('', '', ';='))
+    plain = prepend + plain + append
+    return util.aes_cbc_encrypt(bytes(plain, 'utf8'), util.GLOBAL_KEY)
+
+
+def cbc_dec_ch_16(ct, check=b';admin=true;'):
+    pt = util.aes_cbc_decrypt(ct, util.GLOBAL_KEY)
+    return check in pt
 
 
 if __name__ == '__main__':
