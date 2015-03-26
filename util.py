@@ -7,6 +7,7 @@ import random
 import string
 from Crypto import Random
 from Crypto.Cipher import AES
+import binascii
 
 
 FREQUENCIES = {
@@ -21,7 +22,7 @@ GLOBAL_KEY = Random.new().read(16)
 
 def single_char_xor_decrypt(msg, freq=FREQUENCIES, filter_non_printable=True):
     result_freq = defaultdict(dict)
-    for key in range(255):
+    for key in range(256):
         result = ''.join(chr(x ^ key) for x in msg)
 
         # Discard results with non-printable characters if applicable
@@ -48,10 +49,7 @@ def bhattacharyya_distance(d1, d2):
     :param d2: The second frequency dict to compare.
     :return: The Bhattacharyya coefficient for the two given frequency dicts, higher is better.
     """
-    d = 0.0
-    for k in d1:
-        d += math.sqrt((d1[k] / 100.0) * (d2[k] / 100.0))
-    return d
+    return sum(math.sqrt(d1[k] * d2[k]) for k in d1)
 
 
 def repeating_xor_decrypt(key, msg):
@@ -78,7 +76,10 @@ def aes_ecb_encrypt(data, key, pad=True):
 
 
 def aes_ecb_decrypt(data, key, depad=True):
-    r = AES.new(key, AES.MODE_ECB).decrypt(data)
+    try:
+        r = AES.new(key, AES.MODE_ECB).decrypt(data)
+    except ValueError:
+        raise
     return pkcs7_depad(r) if depad else r
 
 
@@ -91,10 +92,10 @@ def pkcs7_pad(data, block_size=16):
 
 def pkcs7_depad(data):
     last = data[-1]
-    if data.endswith(last.to_bytes(1, 'big') * last):
-        return data[:-data[-1]]
+    if last > 0 and data.endswith(last.to_bytes(1, 'big') * last):
+        return data[:-last]
     else:
-        raise ValueError('Padding invalid!')
+        raise PaddingError()
 
 
 def fixed_xor(ba1, ba2):
@@ -114,6 +115,7 @@ def aes_cbc_decrypt(ct, key, iv=b'\x00'*16, verbose=False):
         iv = b
     if verbose:
         print('d, len(pt):', len(result))
+        print('d, int_res:', to_hex(result))
     return pkcs7_depad(result)
 
 
@@ -263,3 +265,16 @@ def find_repeating_block(ct, bs, minlen=2):
             blocks.append((begin, end))
         begin = end + 1
     return blocks
+
+
+class PaddingError(Exception):
+    pass
+
+
+class NoValidByteFound(Exception):
+    pass
+
+
+def to_hex(bs):
+    i = iter(str(binascii.hexlify(bs), encoding='ascii'))
+    return '\\x' + '\\x'.join(a + b for a, b in zip(i, i))
