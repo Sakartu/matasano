@@ -287,14 +287,15 @@ def to_hex(bs):
     return '\\x' + '\\x'.join(a + b for a, b in zip(i, i))
 
 
-def aes_ctr_encrypt(data, key, nonce=b'\x00'*16):
+def aes_ctr_encrypt(data, key, nonce=b'\x00'*8):
     ctr = 0
     result = b''
     for b in chunks(data, 16):
         to_xor = aes_ecb_encrypt(nonce + ctr.to_bytes(8, 'little'), key, pad=False)
         result += fixed_xor(b, to_xor)
+        ctr += 1
     return result
 
 
-def aes_ctr_decrypt(data, key, nonce=b'\x00'*16):
+def aes_ctr_decrypt(data, key, nonce=b'\x00'*8):
     return aes_ctr_encrypt(data, key, nonce)
