@@ -29,7 +29,7 @@ def single_char_xor_decrypt(msg, freq=FREQUENCIES, filter_non_printable=True):
         if filter_non_printable and any(x not in string.printable for x in result):
             continue
 
-        for c in FREQUENCIES:
+        for c in freq:
             # Take non-printability into account. Add 1 so we never get a division by zero.
             non_print_compensation = sum(x not in string.printable for x in result) + 1
             result_freq[key][c] = result.upper().count(c) / float(len(result)) / non_print_compensation
