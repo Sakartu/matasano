@@ -93,13 +93,9 @@ def brute_single_byte(blocksize, iv, key, idx, ct_block, known_values):
 
 def cbc_enc_ch_17():
     idx = random.randint(0, len(PTS) - 1)
-    # idx = 4
     pt = PTS[idx]
     iv = util.get_random_bytes(16)
-    # iv = b'\x00' * 16
-    # iv = b'\x01\xdf\xa4\xe1]\xaa\xfd\t_\xd2\xcc\xfbN]\xb4\x87'
     key = util.GLOBAL_KEY
-    # key = b'\x9f;nb\xc1\xe3\x1c\xd9\xf6p\x08\xf7;\xe76\xa7'
     return pt, iv, key, util.aes_cbc_encrypt(pt, key, iv=iv)
 
 
