@@ -6,6 +6,7 @@ cbc_padding_oracle
 """
 import base64
 import random
+import logging
 
 import util
 
@@ -26,6 +27,7 @@ PTS = [base64.b64decode(s) for s in
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
     for _ in range(100000):
         break_cbc()
 
@@ -35,18 +37,18 @@ def break_cbc():
     blocksize = 16
     ct_blocks = list(util.chunks(to_decrypt, blocksize))
     i_block = []
-    print('IV:', iv, 'Key:', key)
-    print('CT Blocks:', ct_blocks)
+    logging.info('IV: {} KEY: {}'.format(iv, key))
+    logging.info('CT Blocks: {}'.format(ct_blocks))
     for i in range(len(ct_blocks)):
         i_block.append([None]*blocksize)
 
     for ct_block_idx, ct_block in enumerate(ct_blocks):
-        print('Working on block {0} ({1})'.format(ct_block_idx, ct_block))
+        logging.info('Working on block {0} ({1})'.format(ct_block_idx, ct_block))
         # Use a list of lists to know which bytes to avoid for which location
         ct_idx = 0
         while ct_idx < len(ct_block):
             ct_val = ct_block[::-1][ct_idx]
-            print('Val:', ct_val, 'idx:', ct_idx)
+            logging.info('Val: {} idx: {}'.format(ct_val, ct_idx))
             known_values = [x for x in i_block[ct_block_idx] if x is not None]
             # Loop values for single byte that we're going to guess
             r = brute_single_byte(blocksize, iv, key, ct_idx, ct_block, known_values)
@@ -56,7 +58,7 @@ def break_cbc():
             else:
                 # We couldn't find a matching byte, so the previous two bytes are probably wrong. Retry with a different
                 # base block
-                print('Couldn\'t find matching byte, erase results and retry with different base.')
+                logging.info('Couldn\'t find matching byte, erase results and retry with different base.')
                 i_block[ct_block_idx] = [None] * blocksize
                 ct_idx = 0
 
@@ -64,7 +66,7 @@ def break_cbc():
     for l1, l2 in zip([iv] + ct_blocks, i_block):
         for a, b in zip(l1, l2):
             pt += (a ^ b).to_bytes(1, 'big')
-    print('Plaintext was:', pt)
+    logging.info('Plaintext was: {}'.format(pt))
 
 
 def brute_single_byte(blocksize, iv, key, idx, ct_block, known_values):
@@ -81,11 +83,11 @@ def brute_single_byte(blocksize, iv, key, idx, ct_block, known_values):
         b = i.to_bytes(1, 'big')
         ct = base + b + pad + ct_block
         if not len(ct) % blocksize == 0:
-            print(ct)
+            logging.info(ct)
             raise AssertionError('CT is not a multiple of blocksize!')
         if cbc_dec_ch_17(ct, key, iv):
             return i ^ idx
-    print('base', base, 'pad', pad, 'ct_block', ct_block)
+    logging.info('base: {} pad: {} ct_block: {}'.format(base, pad, ct_block))
     return None
 
 
