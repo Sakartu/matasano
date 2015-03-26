@@ -56,8 +56,8 @@ def break_cbc():
                 i_block[ct_block_idx][-ct_idx-1] = r
                 ct_idx += 1
             else:
-                # We couldn't find a matching byte, so the previous two bytes are probably wrong. Retry with a different
-                # base block
+                # We couldn't find a matching byte, so there was probably an "accidental" valid padding. This occurs
+                # very rarely, so we can just retry this block with a different base.
                 logging.info('Couldn\'t find matching byte, erase results and retry with different base.')
                 i_block[ct_block_idx] = [None] * blocksize
                 ct_idx = 0
