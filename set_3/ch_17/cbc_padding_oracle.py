@@ -28,7 +28,8 @@ PTS = [base64.b64decode(s) for s in
 
 def main():
     logging.basicConfig(level=logging.INFO)
-    for _ in range(100000):
+    for i in range(100000):
+        print('Iteration {}'.format(i))
         break_cbc()
 
 
@@ -48,7 +49,6 @@ def break_cbc():
         ct_idx = 0
         while ct_idx < len(ct_block):
             ct_val = ct_block[::-1][ct_idx]
-            logging.info('Val: {} idx: {}'.format(ct_val, ct_idx))
             known_values = [x for x in i_block[ct_block_idx] if x is not None]
             # Loop values for single byte that we're going to guess
             r = brute_single_byte(blocksize, iv, key, ct_idx, ct_block, known_values)
