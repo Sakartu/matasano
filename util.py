@@ -99,6 +99,13 @@ def pkcs7_depad(data):
 
 
 def fixed_xor(ba1, ba2):
+    """
+    byte-wise XOR all entries of ba1 with entries from ba2. If ba2 is longer than ba1, the remaining entries will be
+    ignored.
+    :param ba1: The first sequence to get items from
+    :param ba2: The second sequence to get items from
+    :return: items from ba1 XOR ba2 as bytes() object.
+    """
     return bytes(b1 ^ b2 for b1, b2 in zip(ba1, ba2))
 
 
@@ -278,3 +285,16 @@ class NoValidByteFound(Exception):
 def to_hex(bs):
     i = iter(str(binascii.hexlify(bs), encoding='ascii'))
     return '\\x' + '\\x'.join(a + b for a, b in zip(i, i))
+
+
+def aes_ctr_encrypt(data, key, nonce=b'\x00'*16):
+    ctr = 0
+    result = b''
+    for b in chunks(data, 16):
+        to_xor = aes_ecb_encrypt(nonce + ctr.to_bytes(8, 'little'), key, pad=False)
+        result += fixed_xor(b, to_xor)
+    return result
+
+
+def aes_ctr_decrypt(data, key, nonce=b'\x00'*16):
+    return aes_ctr_encrypt(data, key, nonce)
