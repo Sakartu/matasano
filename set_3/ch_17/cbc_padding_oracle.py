@@ -33,7 +33,7 @@ def main():
 
 
 def break_cbc():
-    pt, iv, key, to_decrypt = cbc_enc_ch_17()
+    real_pt, iv, key, to_decrypt = cbc_enc_ch_17()
     blocksize = 16
     ct_blocks = list(util.chunks(to_decrypt, blocksize))
     i_block = []
@@ -66,6 +66,7 @@ def break_cbc():
     for l1, l2 in zip([iv] + ct_blocks, i_block):
         for a, b in zip(l1, l2):
             pt += (a ^ b).to_bytes(1, 'big')
+    assert real_pt in pt
     logging.info('Plaintext was: {}'.format(pt))
 
 
