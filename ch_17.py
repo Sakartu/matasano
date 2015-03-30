@@ -7,6 +7,7 @@ cbc_padding_oracle
 import base64
 import random
 import logging
+from exceptions import PaddingError
 
 import util
 
@@ -104,7 +105,7 @@ def cbc_dec_ch_17(ct, key, iv):
     try:
         util.aes_cbc_decrypt(ct, key, iv)
         return True
-    except util.PaddingError:
+    except PaddingError:
         return False
 
 

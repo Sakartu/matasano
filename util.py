@@ -1,13 +1,16 @@
-import base64
 from collections import defaultdict
 from itertools import cycle
 import math
 from operator import itemgetter
 import random
 import string
-from Crypto import Random
-from Crypto.Cipher import AES
 import binascii
+
+from Crypto import Random
+
+from Crypto.Cipher import AES
+
+from exceptions import PaddingError
 
 
 FREQUENCIES = {
@@ -272,14 +275,6 @@ def find_repeating_block(ct, bs, minlen=2):
             blocks.append((begin, end))
         begin = end + 1
     return blocks
-
-
-class PaddingError(Exception):
-    pass
-
-
-class NoValidByteFound(Exception):
-    pass
 
 
 def to_hex(bs):
