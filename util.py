@@ -250,8 +250,8 @@ def aes_ctr_encrypt(data, key, nonce=b'\x00'*8):
     ctr = 0
     result = b''
     for b in chunks(data, 16):
-        to_xor = aes_ecb_encrypt(nonce + ctr.to_bytes(8, 'little'), key, pad=False)
-        result += fixed_xor(b, to_xor)
+        keystream = aes_ecb_encrypt(nonce + ctr.to_bytes(8, 'little'), key, pad=False)
+        result += fixed_xor(b, keystream)
         ctr += 1
     return result
 
