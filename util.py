@@ -1,4 +1,4 @@
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from itertools import cycle
 import math
 from operator import itemgetter
@@ -53,6 +53,16 @@ def bhattacharyya_distance(d1, d2):
     :return: The Bhattacharyya coefficient for the two given frequency dicts, higher is better.
     """
     return sum(math.sqrt(d1[k] * d2[k]) for k in d1)
+
+
+def text_frequencies(text):
+    """
+    Calculate the frequencies of each character in bytes() object text.
+    :param text: The text to calculate character frequencies for
+    :return: An OrderedDict mapping char to the frequency of occurrence in text, sorted by frequency
+    """
+    s = sorted(((k.to_bytes(1, 'big'), text.count(k) / len(text)) for k in set(text)), key=itemgetter(1), reverse=True)
+    return OrderedDict(s)
 
 
 def repeating_xor_decrypt(key, msg):
