@@ -4,7 +4,7 @@
 Usage:
 ecb_cut_and_paste.py
 """
-from profile import Profile
+from profiles import Profile
 import util
 
 __author__ = 'peter'
