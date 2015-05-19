@@ -250,15 +250,17 @@ def get_key_stream(nonce, ctr, key):
     return aes_ecb_encrypt(nonce + ctr.to_bytes(8, 'little'), key, pad=False)
 
 
-def aes_ctr_encrypt(data, key, nonce=b'\x00'*8):
+def aes_ctr_encrypt(data, key, nonce=b'\x00'*8, debug=False):
     ctr = 0
     result = b''
     for b in chunks(data, 16):
         keystream = get_key_stream(nonce, ctr, key)
+        if debug:
+            print('Keystream for counter {} is {}'.format(ctr, keystream))
         result += fixed_xor(b, keystream)
         ctr += 1
     return result
 
 
-def aes_ctr_decrypt(data, key, nonce=b'\x00'*8):
-    return aes_ctr_encrypt(data, key, nonce)
+def aes_ctr_decrypt(data, key, nonce=b'\x00'*8, debug=False):
+    return aes_ctr_encrypt(data, key, nonce, debug)
