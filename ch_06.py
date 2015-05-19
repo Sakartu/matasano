@@ -61,11 +61,8 @@ def main():
         key = ''
         for block in transposed:
             result = util.single_char_xor_decrypt(bytearray(block), filter_non_printable=False)
-            if not result:
-                print(result)
-                continue
             c, d, r = result[0]
-            key += c
+            key += chr(c)
         decrypted.append((keysize, key, repr(util.repeating_xor_decrypt(key, data))))
     decrypted = sorted(decrypted, key=lambda x: sum(y in string.punctuation for y in x[2]))
     print('Most probable key: "{0}"'.format(decrypted[0][1]))

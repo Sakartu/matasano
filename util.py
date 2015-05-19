@@ -40,7 +40,7 @@ def single_char_xor_decrypt(msg, freq=FREQUENCIES, filter_non_printable=True):
         d = bhattacharyya_distance(freq, result_freq[key])
         result_freq[key]['dist'] = d
 
-    return sorted([(chr(k), result_freq[k]['dist'], result_freq[k]['result']) for k in result_freq], key=itemgetter(1), reverse=True)
+    return sorted([(k, result_freq[k]['dist'], result_freq[k]['result']) for k in result_freq], key=itemgetter(1), reverse=True)
 
 
 def bhattacharyya_distance(d1, d2):
@@ -256,7 +256,7 @@ def aes_ctr_encrypt(data, key, nonce=b'\x00'*8, debug=False):
     for b in chunks(data, 16):
         keystream = get_key_stream(nonce, ctr, key)
         if debug:
-            print('Keystream for counter {} is {}'.format(ctr, keystream))
+            print('Keystream for counter {} is {}'.format(ctr, to_hex(keystream)))
         result += fixed_xor(b, keystream)
         ctr += 1
     return result

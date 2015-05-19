@@ -18,7 +18,7 @@ def main():
         t.align = 'l'
         result = util.single_char_xor_decrypt(bytearray.fromhex(m))
         for c, d, r in result:
-            t.add_row((c, d, repr(r)))
+            t.add_row((chr(c), d, repr(r)))
         print(t.get_string())
 
 
