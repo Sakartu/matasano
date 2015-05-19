@@ -27,9 +27,7 @@ def truncate(cts, l):
 
 def main():
     # Use static key for easy debugging
-    key = b'sf\x13\xf5H\xe3\xda\xa4Dl[\xda>\xc8\xc5\xee'
-    testmsg = util.get_random_bytes(16*8)
-    assert util.aes_ctr_decrypt(util.aes_ctr_encrypt(testmsg, key), key) == testmsg
+    key = util.get_random_bytes(16)
     cts = get_ciphertexts(key)
     keysize = min(len(x) for x in cts)
     print("Shortest ct is {} bytes".format(keysize))
