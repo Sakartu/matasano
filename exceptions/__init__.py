@@ -7,3 +7,7 @@ class PaddingError(Exception):
 
 class NoValidByteFound(Exception):
     pass
+
+
+class NotSeededError(Exception):
+    pass

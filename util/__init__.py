@@ -9,7 +9,7 @@ import binascii
 from Crypto import Random
 from Crypto.Cipher import AES
 
-from exceptions import PaddingError
+from exceptions import PaddingError, NotSeededError
 
 FREQUENCIES = {
     'E': 0.1202, 'T': 0.091, 'A': 0.0812, 'O': 0.0768, 'I': 0.0731, 'N': 0.0695, 'S': 0.0628, 'R': 0.0602, 'H': 0.0592,
@@ -269,34 +269,95 @@ class TwisterRandom:
     def __init__(self, seed):
         self.mt = [0] * 624
         self.index = 0
-        self._initialize_generator(seed)
+        self.seed = seed
+        if seed is not None:
+            self._initialize_generator(seed)
 
     def _initialize_generator(self, seed):
         self.index = 0
         self.mt[0] = int(seed)
         for i in range(1, 624):
-            self.mt[i] = (1812433253 * (self.mt[i - 1] ^ (self.mt[i - 1] >> 30)) + i) & 0xffffffff
+            self.mt[i] = (1812433253 * (self.mt[i - 1] ^ (self.mt[i - 1] >> 30)) + i) & 0xffffffff  # 0x6c078965
 
     def extract_number(self):
+        if self.seed is None:
+            raise NotSeededError("TwisterRandom class was called with None as seed, please recreate or call clone()!")
+
         if not self.index:
             self._generate_numbers()
 
         y = self.mt[self.index]
 
         y ^= y >> 11
-        y ^= (y << 7) & 2636928640
-        y ^= (y << 15) & 4022730752
+        y ^= (y << 7) & 2636928640  # 0x9d2c5680
+        y ^= (y << 15) & 4022730752  # 0xefc60000
         y ^= y >> 18
 
         self.index = (self.index + 1) % 624
         return y
+
+    def clone(self, numbers):
+        for i in range(624):
+            # Apply inverse operations of extract_number to recreate state
+            n = numbers[i]
+            n = self._undo_shift_a(n)
+            n = self._undo_shift_b(n)
+            n = self._undo_shift_c(n)
+            n = self._undo_shift_d(n)
+
+            # Set the internal state
+            self.mt[i] = n
+        self.seed = -1
+        return self
+
+    @staticmethod
+    def _undo_shift_a(val):
+        # original: y ^= y >> 18
+        # This one is easy, since the shift is larger than 16, so no tampered bits remain in (val >> 18)
+        return val ^ (val >> 18)
+
+    @staticmethod
+    def _undo_shift_b(val):
+        # original: y ^= (y << 15) & 4022730752  # 0xefc60000
+        # Only bits 1, 4, 5, 6, 8, 11, 13, and 14 were XOR'd with their shifted variant. We use the mask to select these
+        # bits in the shifted val. We use the result to XOR these same bits back in val.
+        a = (val << 15) & 4022730752  # 0xefc60000
+        return val ^ a
+
+    @staticmethod
+    def _undo_shift_c(val):
+        # original: y ^= (y << 7) & 2636928640  # 0x9d2c5680
+        a = (val << 7) & 0x1680
+        val ^= a
+        a = (val << 7) & 0xc4000
+        val ^= a
+        a = (val << 7) & 0xd200000
+        val ^= a
+        a = (val << 7) & 0x90000000
+        return val ^ a
+
+    @staticmethod
+    def _undo_shift_d(val):
+        # original: y ^= y >> 11
+        # This one is a bit harder than shift_a. We have to create clean bits in two steps; the first step produces
+        # 11 clean bits, the second step another 11 (making 22).
+        # a contains 11 clean bits and 10 tampered bits
+        a = val >> 11
+
+        # b now contains 22 clean bits and 10 tampered bits
+        b = val ^ a
+
+        # because b has 22 clean bits and 10 tampered bits, if we shift b to the right with 11, we have 21 clean bits
+        # left.
+        c = b >> 11
+        return val ^ c
 
     def _generate_numbers(self):
         for i in range(624):
             y = (self.mt[i] & 0x80000000) + (self.mt[(i + 1) % 624] & 0x7fffffff)
             self.mt[i] = self.mt[(i + 397) % 624] ^ (y >> 1)
             if y % 2:  # y is odd
-                self.mt[i] ^= 2567483615
+                self.mt[i] ^= 2567483615  # 0x9908b0df
 
 
 class Profile:
