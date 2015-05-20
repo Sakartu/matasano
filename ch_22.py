@@ -11,18 +11,21 @@ from util import TwisterRandom
 
 __author__ = 'peter'
 
+
 def main():
     # Sleep a random amount of time
-    print('Sleeping first time...')
-    time.sleep(random.randint(40, 1000))
+    w = random.randint(40, 1000)
+    print('Sleeping first time ({} seconds)...'.format(w))
+    time.sleep(w)
 
     # Seed the PRNG
     print('Seeding...')
     r = TwisterRandom(time.time())
 
     # Sleep a random amount of time
-    print('Sleeping second time...')
-    time.sleep(random.randint(40, 1000))
+    w = random.randint(40, 1000)
+    print('Sleeping second time ({} seconds)...'.format(w))
+    time.sleep(w)
 
     # Get the first number from the PRNG
     v = r.extract_number()
@@ -34,9 +37,10 @@ def main():
     print('Cracking seed...')
     for i in range(1000*1000):  # Try all seeds, for every millisecond in 1000 seconds
         if v == TwisterRandom(current_time - i).extract_number():
-            print('Seed was {}!'.format(current_time - i))
-
-
+            print('Successfully cracked, seed was {}!'.format(int(current_time - i)))
+            break
+    else:
+        print('Couldn\'t crack seed!')
 
 
 if __name__ == '__main__':
