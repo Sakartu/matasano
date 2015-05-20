@@ -2,7 +2,7 @@
 # -*- coding: utf8 -*-
 """
 Usage:
-ch_19
+ch_21
 """
 from util import TwisterRandom
 
