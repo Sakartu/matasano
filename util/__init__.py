@@ -273,7 +273,7 @@ class TwisterRandom:
 
     def _initialize_generator(self, seed):
         self.index = 0
-        self.mt[0] = seed
+        self.mt[0] = int(seed)
         for i in range(1, 624):
             self.mt[i] = (1812433253 * (self.mt[i - 1] ^ (self.mt[i - 1] >> 30)) + i) & 0xffffffff
 
