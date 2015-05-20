@@ -7,8 +7,8 @@ cbc_padding_oracle
 import base64
 import random
 import logging
-from exceptions import PaddingError
 
+from util.exceptions import PaddingError
 import util
 
 __author__ = 'peter'

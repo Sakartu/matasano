@@ -4,10 +4,7 @@
 Usage:
 ch_19
 """
-import base64
-import binascii
-from mt_random import TwisterRandom
-import util
+from util.mt_random import TwisterRandom
 
 __author__ = 'peter'
 

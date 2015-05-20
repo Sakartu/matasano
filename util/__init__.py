@@ -7,10 +7,9 @@ import string
 import binascii
 
 from Crypto import Random
-
 from Crypto.Cipher import AES
 
-from exceptions import PaddingError
+from util.exceptions import PaddingError
 
 FREQUENCIES = {
     'E': 0.1202, 'T': 0.091, 'A': 0.0812, 'O': 0.0768, 'I': 0.0731, 'N': 0.0695, 'S': 0.0628, 'R': 0.0602, 'H': 0.0592,
