@@ -2,11 +2,12 @@ __author__ = 'peter'
 
 
 class TwisterRandom:
-    def __init__(self):
+    def __init__(self, seed):
         self.mt = [0] * 624
         self.index = 0
+        self._initialize_generator(seed)
 
-    def initialize_generator(self, seed):
+    def _initialize_generator(self, seed):
         self.index = 0
         self.mt[0] = seed
         for i in range(1, 624):

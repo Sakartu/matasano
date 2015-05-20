@@ -13,8 +13,7 @@ __author__ = 'peter'
 
 def main():
     values = [int(x.strip()) for x in open('resources/ch_21.txt') if x]
-    r = TwisterRandom()
-    r.initialize_generator(1)
+    r = TwisterRandom(1)
     print('Generating...')
     for v in values:
         n = r.extract_number()
