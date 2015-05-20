@@ -4,7 +4,7 @@
 Usage:
 ch_19
 """
-from util.mt_random import TwisterRandom
+from util import TwisterRandom
 
 __author__ = 'peter'
 

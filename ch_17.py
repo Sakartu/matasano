@@ -8,7 +8,7 @@ import base64
 import random
 import logging
 
-from util.exceptions import PaddingError
+from exceptions import PaddingError
 import util
 
 __author__ = 'peter'

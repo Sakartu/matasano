@@ -9,7 +9,7 @@ import binascii
 from Crypto import Random
 from Crypto.Cipher import AES
 
-from util.exceptions import PaddingError
+from exceptions import PaddingError
 
 FREQUENCIES = {
     'E': 0.1202, 'T': 0.091, 'A': 0.0812, 'O': 0.0768, 'I': 0.0731, 'N': 0.0695, 'S': 0.0628, 'R': 0.0602, 'H': 0.0592,
@@ -263,3 +263,82 @@ def aes_ctr_encrypt(data, key, nonce=b'\x00'*8, debug=False):
 
 def aes_ctr_decrypt(data, key, nonce=b'\x00'*8, debug=False):
     return aes_ctr_encrypt(data, key, nonce, debug)
+
+
+class TwisterRandom:
+    def __init__(self, seed):
+        self.mt = [0] * 624
+        self.index = 0
+        self._initialize_generator(seed)
+
+    def _initialize_generator(self, seed):
+        self.index = 0
+        self.mt[0] = seed
+        for i in range(1, 624):
+            self.mt[i] = (1812433253 * (self.mt[i-1] ^ (self.mt[i-1] >> 30)) + i) & 0xffffffff
+
+    def extract_number(self):
+        if not self.index:
+            self._generate_numbers()
+
+        y = self.mt[self.index]
+
+        y ^= y >> 11
+        y ^= (y << 7) & 2636928640
+        y ^= (y << 15) & 4022730752
+        y ^= y >> 18
+
+        self.index = (self.index + 1) % 624
+        return y
+
+    def _generate_numbers(self):
+        for i in range(624):
+            y = (self.mt[i] & 0x80000000) + (self.mt[(i + 1) % 624] & 0x7fffffff)
+            self.mt[i] = self.mt[(i + 397) % 624] ^ (y >> 1)
+            if y % 2:  # y is odd
+                self.mt[i] ^= 2567483615
+
+
+class Profile:
+    def __init__(self, email, uid, role):
+        self.email = email
+        self.uid = uid
+        self.role = role
+
+    def encode(self):
+        return '&'.join('{0}={1}'.format(k, getattr(self, k)) for k in ('email', 'uid', 'role'))
+
+    def encrypt(self):
+        s = bytes(self.encode(), 'utf8')
+        _, ct = encryption_oracle(s, mode=AES.MODE_ECB, prepend=b'', append=b'')
+        return ct
+
+
+    @staticmethod
+    def parse_cookie(cookie):
+        result = {}
+        for part in cookie.split('&'):
+            if '=' not in part:
+                continue
+            k, v = part.split('=')
+            result[k] = v
+        return result
+
+
+    @staticmethod
+    def profile_for(email, uid=10, role='user'):
+        email = email.translate(str.maketrans('', '', '&='))
+        return Profile(email, uid, role)
+
+
+    @staticmethod
+    def decrypt(ct):
+        pt = aes_ecb_decrypt(ct, GLOBAL_KEY)
+        s = Profile.parse_cookie(pt.decode('utf8'))
+        if 'email' in s and 'uid' in s and 'role' in s:
+            return Profile(s['email'], s['uid'], s['role'])
+        else:
+            raise ValueError('Couldn\'t create profile for {0}'.format(s))
+
+    def __repr__(self):
+        return str(vars(self))
