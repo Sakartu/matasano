@@ -17,6 +17,7 @@ def main():
     time.sleep(random.randint(40, 1000))
 
     # Seed the PRNG
+    print('Seeding...')
     r = TwisterRandom(time.time())
 
     # Sleep a random amount of time
