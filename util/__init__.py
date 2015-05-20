@@ -17,7 +17,6 @@ FREQUENCIES = {
     'P': 0.0182, 'B': 0.0149, 'V': 0.0111, 'K': 0.0069, 'X': 0.0017, 'Q': 0.0011, 'J': 0.001, 'Z': 0.0007,
 }
 
-
 GLOBAL_KEY = Random.new().read(16)
 
 
@@ -39,7 +38,8 @@ def single_char_xor_decrypt(msg, freq=FREQUENCIES, filter_non_printable=True):
         d = bhattacharyya_distance(freq, result_freq[key])
         result_freq[key]['dist'] = d
 
-    return sorted([(k, result_freq[k]['dist'], result_freq[k]['result']) for k in result_freq], key=itemgetter(1), reverse=True)
+    return sorted([(k, result_freq[k]['dist'], result_freq[k]['result']) for k in result_freq], key=itemgetter(1),
+                  reverse=True)
 
 
 def bhattacharyya_distance(d1, d2):
@@ -75,7 +75,7 @@ def chunks(l, n, num=None):
     """ Yield successive n-sized chunks from l. If num is an integer, yield max num results.
     """
     for idx, i in enumerate(range(0, len(l), n)):
-        yield l[i:i+n]
+        yield l[i:i + n]
         if num is not None and idx == num:
             return
 
@@ -120,7 +120,7 @@ def fixed_xor(ba1, ba2):
     return bytes(b1 ^ b2 for b1, b2 in zip(ba1, ba2))
 
 
-def aes_cbc_decrypt(ct, key, iv=b'\x00'*16, verbose=False):
+def aes_cbc_decrypt(ct, key, iv=b'\x00' * 16, verbose=False):
     if verbose:
         print('d, len(ct):', len(ct))
     blocks = list(chunks(ct, 16))
@@ -137,7 +137,7 @@ def aes_cbc_decrypt(ct, key, iv=b'\x00'*16, verbose=False):
     return pkcs7_depad(result)
 
 
-def aes_cbc_encrypt(data, key, iv=b'\x00'*16, verbose=False):
+def aes_cbc_encrypt(data, key, iv=b'\x00' * 16, verbose=False):
     if verbose:
         print('e, len(data):', len(data))
     data = pkcs7_pad(data)
@@ -213,7 +213,7 @@ def detect_blocksize(cipher):
         blocksize = 0
         # for challenge 12
         for i in range(1, 512):
-            ct = cipher(b'A'*i)
+            ct = cipher(b'A' * i)
             if not blocksize:
                 blocksize = len(ct)
             else:
@@ -229,7 +229,7 @@ def find_repeating_block(ct, bs, minlen=2):
     blocks = []
     while begin < len(cs):
         end = begin
-        for block in cs[begin+1:]:
+        for block in cs[begin + 1:]:
             if block == cs[begin]:
                 end += 1
             else:
@@ -249,7 +249,7 @@ def get_key_stream(nonce, ctr, key):
     return aes_ecb_encrypt(nonce + ctr.to_bytes(8, 'little'), key, pad=False)
 
 
-def aes_ctr_encrypt(data, key, nonce=b'\x00'*8, debug=False):
+def aes_ctr_encrypt(data, key, nonce=b'\x00' * 8, debug=False):
     ctr = 0
     result = b''
     for b in chunks(data, 16):
@@ -261,7 +261,7 @@ def aes_ctr_encrypt(data, key, nonce=b'\x00'*8, debug=False):
     return result
 
 
-def aes_ctr_decrypt(data, key, nonce=b'\x00'*8, debug=False):
+def aes_ctr_decrypt(data, key, nonce=b'\x00' * 8, debug=False):
     return aes_ctr_encrypt(data, key, nonce, debug)
 
 
@@ -275,7 +275,7 @@ class TwisterRandom:
         self.index = 0
         self.mt[0] = seed
         for i in range(1, 624):
-            self.mt[i] = (1812433253 * (self.mt[i-1] ^ (self.mt[i-1] >> 30)) + i) & 0xffffffff
+            self.mt[i] = (1812433253 * (self.mt[i - 1] ^ (self.mt[i - 1] >> 30)) + i) & 0xffffffff
 
     def extract_number(self):
         if not self.index:
@@ -313,7 +313,6 @@ class Profile:
         _, ct = encryption_oracle(s, mode=AES.MODE_ECB, prepend=b'', append=b'')
         return ct
 
-
     @staticmethod
     def parse_cookie(cookie):
         result = {}
@@ -324,12 +323,10 @@ class Profile:
             result[k] = v
         return result
 
-
     @staticmethod
     def profile_for(email, uid=10, role='user'):
         email = email.translate(str.maketrans('', '', '&='))
         return Profile(email, uid, role)
-
 
     @staticmethod
     def decrypt(ct):
