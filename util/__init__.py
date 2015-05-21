@@ -8,6 +8,7 @@ import binascii
 
 from Crypto import Random
 from Crypto.Cipher import AES
+import time
 
 from exceptions import PaddingError, NotSeededError
 
@@ -358,6 +359,32 @@ class TwisterRandom:
             self.mt[i] = self.mt[(i + 397) % 624] ^ (y >> 1)
             if y % 2:  # y is odd
                 self.mt[i] ^= 2567483615  # 0x9908b0df
+
+
+def get_password_reset_token():
+    # Just use some random bytes, encrypted using mt_encrypt with time.time() as seed
+    return mt_encrypt(get_random_bytes(24) + b'PASSWORD TOKEN', time.time())
+
+
+def test_password_reset_token(data, t):
+    for k in range(int(t), int(t) - 1000 * 60 * 2, -1):  # Try all millisecond values between t and (t-2 min.)
+        pt = mt_decrypt(data, k)
+        if pt.endswith(b'PASSWORD TOKEN'):
+            return True
+    return False
+
+
+def mt_encrypt(data, seed):
+    r = TwisterRandom(seed)
+    result = b''
+    for b in chunks(data, 4):
+        k = r.extract_number().to_bytes(4, 'big')
+        result += fixed_xor(b, k)
+    return result
+
+
+def mt_decrypt(data, seed):
+    return mt_encrypt(data, seed)
 
 
 class Profile:
