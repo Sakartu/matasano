@@ -2,7 +2,7 @@
 # -*- coding: utf8 -*-
 """
 Usage:
-cbc_bitflipping.py
+ch_16.py
 """
 from itertools import product
 
@@ -14,17 +14,14 @@ __author__ = 'peter'
 
 
 def main():
-    cipher = lambda plain: cbc_enc_ch_16(plain)
-    decipher = lambda ct: cbc_dec_ch_16(ct)
-
     # Two plaintext blocks of 16 bytes
-    pt = 'aaaaaaaaaaaaaaaa' + '0admin1true2aaaa'
+    pt = b'aaaaaaaaaaaaaaaa' + b'0admin1true2aaaa'
     # block to encrypt will be prefix + pt + postfix:
     # "comment1=cooking" + "%20MCs;userdata=" + "aaaaaaaaaaaaaaaa" + "0admin1true2aaaa" + ";comment2=%20lik" +
     # "e%20a%20pound%20" + "of%20bacon"
     # We will flip bits in the "aaaaaaaaaaaaaaaa" part, to change bits in the "0admin1true2aaaa" part
     print('Bruting...')
-    ct = cipher(pt)
+    ct = cbc_enc_ch_16(pt)
     for idx, (a, b, c) in enumerate(product(range(255), range(255), range(255))):
         tampered = bytearray(ct)
         tampered[32] = a  # 0 + 32, loc of first ;
@@ -34,19 +31,19 @@ def main():
         if not idx % 100000:
             sys.stderr.write('.')
 
-        if decipher(tampered):
-            print()
+        if cbc_dec_ch_16(tampered):
+            print('Found ciphertext with ";admin=true;" in it:')
             print(ct)
+            return
 
 
-def cbc_enc_ch_16(plain, prepend=None, append=None):
-    if prepend is None:
-        prepend = "comment1=cooking%20MCs;userdata="
-    if append is None:
-        append = ";comment2=%20like%20a%20pound%20of%20bacon"
-    plain = plain.translate(str.maketrans('', '', ';='))
+def cbc_enc_ch_16(plain):
+    prepend = b"comment1=cooking%20MCs;userdata="
+    append = b";comment2=%20like%20a%20pound%20of%20bacon"
+    plain = plain.replace(b';', b'')
+    plain = plain.replace(b'=', b'')
     plain = prepend + plain + append
-    return util.aes_cbc_encrypt(bytes(plain, 'utf8'), util.GLOBAL_KEY)
+    return util.aes_cbc_encrypt(plain, util.GLOBAL_KEY)
 
 
 def cbc_dec_ch_16(ct, check=b';admin=true;'):
