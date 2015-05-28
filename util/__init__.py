@@ -430,8 +430,7 @@ class Profile:
 
     def encrypt(self):
         s = bytes(self.encode(), 'utf8')
-        _, ct = encryption_oracle(s, mode=AES.MODE_ECB, prepend=b'', append=b'')
-        return ct
+        return encryption_oracle(s, mode=AES.MODE_ECB, prepend=b'', append=b'')[1]
 
     @staticmethod
     def parse_cookie(cookie):
