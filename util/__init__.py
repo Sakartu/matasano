@@ -22,6 +22,17 @@ GLOBAL_KEY = Random.new().read(16)
 
 
 def single_char_xor_decrypt(msg, freq=FREQUENCIES, filter_non_printable=True):
+    """
+    Try to decrypt the given message which is assumed to be encrypted using a single-character XOR encryption. We use
+    the frequency table above, giving the letter frequencies of the English language, to find the most-likely key
+    for encryption.
+
+    :param msg: The message to try to decrypt
+    :param freq: The letter-frequency table to use, by default uses the frequencies for the English language
+    :param filter_non_printable: Whether to skip keys that generate unprintable characters after decryption
+    :return: A sorted list containing tuples: (key, distance from given frequency table, decrypted message). The first
+    tuple is the most likely candidate key for decryption.
+    """
     result_freq = defaultdict(dict)
     for key in range(256):
         result = ''.join(chr(x ^ key) for x in msg)
@@ -241,12 +252,27 @@ def find_repeating_block(ct, bs, minlen=2):
     return blocks
 
 
-def to_hex(bs):
-    i = iter(str(binascii.hexlify(bs), encoding='ascii'))
+def to_hex(o):
+    """
+    A function to pretty-print the object o in a form of \\xff
+    :param o: This can be either a bytes() object (where each character will be printed in byte-representation), an int,
+    a bytearray or a string (which will be converted to a bytes() object with encoding utf8)
+    :return: o, with each byte printed as \\x string as described above
+    """
+    if isinstance(o, str):
+        o = bytes(o, encoding='utf8')
+
+    if isinstance(o, bytes) or isinstance(o, bytearray):
+        i = iter(str(binascii.hexlify(o), encoding='ascii'))
+    elif isinstance(o, int):
+        i = iter(hex(o)[2:])
+    else:
+        raise NotImplementedError('This function only works with bytes, ints or bytearray objects!')
     return '\\x' + '\\x'.join(a + b for a, b in zip(i, i))
 
 
 def get_key_stream(nonce, ctr, key):
+    # Use a 64 bit unsigned little endian nonce and a 64 bit little endian block count
     return aes_ecb_encrypt(nonce + ctr.to_bytes(8, 'little'), key, pad=False)
 
 
@@ -264,6 +290,12 @@ def aes_ctr_encrypt(data, key, nonce=b'\x00' * 8, debug=False):
 
 def aes_ctr_decrypt(data, key, nonce=b'\x00' * 8, debug=False):
     return aes_ctr_encrypt(data, key, nonce, debug)
+
+
+def aes_ctr_edit(ct, key, offset, newtext, nonce=b'\x00' * 8, debug=False):
+    orig_pt = aes_ctr_decrypt(ct, key, nonce, debug)
+    new_pt = orig_pt[:offset] + newtext
+    return aes_ctr_encrypt(new_pt, key, nonce, debug)
 
 
 class TwisterRandom:
