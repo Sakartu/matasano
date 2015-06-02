@@ -2,7 +2,7 @@
 # -*- coding: utf8 -*-
 """
 Usage:
-ch_16.py
+ch_26.py
 """
 from itertools import product
 
