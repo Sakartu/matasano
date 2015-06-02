@@ -21,7 +21,7 @@ def main():
     # "e%20a%20pound%20" + "of%20bacon"
     # We will flip bits in the "aaaaaaaaaaaaaaaa" part, to change bits in the "0admin1true2aaaa" part
     print('Bruting...')
-    ct = cbc_enc_ch_16(pt)
+    ct = cipher(pt)
     for idx, (a, b, c) in enumerate(product(range(255), range(255), range(255))):
         tampered = bytearray(ct)
         tampered[32] = a  # 0 + 32, loc of first ;
@@ -31,13 +31,13 @@ def main():
         if not idx % 100000:
             sys.stderr.write('.')
 
-        if cbc_dec_ch_16(tampered):
+        if decipher(tampered):
             print('Found ciphertext with ";admin=true;" in it:')
             print(ct)
             return
 
 
-def cbc_enc_ch_16(plain):
+def cipher(plain):
     prepend = b"comment1=cooking%20MCs;userdata="
     append = b";comment2=%20like%20a%20pound%20of%20bacon"
     plain = plain.replace(b';', b'')
@@ -46,7 +46,7 @@ def cbc_enc_ch_16(plain):
     return util.aes_cbc_encrypt(plain, util.GLOBAL_KEY)
 
 
-def cbc_dec_ch_16(ct, check=b';admin=true;'):
+def decipher(ct, check=b';admin=true;'):
     pt = util.aes_cbc_decrypt(ct, util.GLOBAL_KEY)
     return check in pt
 
