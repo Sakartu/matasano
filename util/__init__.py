@@ -132,7 +132,7 @@ def fixed_xor(ba1, ba2):
     return bytes(b1 ^ b2 for b1, b2 in zip(ba1, ba2))
 
 
-def aes_cbc_decrypt(ct, key, iv=b'\x00' * 16, verbose=False):
+def aes_cbc_decrypt(ct, key, iv=b'\x00' * 16, depad=True, verbose=False):
     if verbose:
         print('d, len(ct):', len(ct))
     blocks = list(chunks(ct, 16))
@@ -146,13 +146,17 @@ def aes_cbc_decrypt(ct, key, iv=b'\x00' * 16, verbose=False):
     if verbose:
         print('d, len(pt):', len(result))
         print('d, int_res:', to_hex(result))
-    return pkcs7_depad(result)
+    if depad:
+        return pkcs7_depad(result)
+    else:
+        return result
 
 
-def aes_cbc_encrypt(data, key, iv=b'\x00' * 16, verbose=False):
+def aes_cbc_encrypt(data, key, iv=b'\x00' * 16, pad=True, verbose=False):
     if verbose:
         print('e, len(data):', len(data))
-    data = pkcs7_pad(data)
+    if pad:
+        data = pkcs7_pad(data)
     if verbose:
         print('e, len(data) + pad:', len(data))
     blocks = list(chunks(data, 16))
@@ -458,3 +462,11 @@ class Profile:
 
     def __repr__(self):
         return str(vars(self))
+
+
+def is_ascii(b):
+    try:
+        b.decode('ascii')
+        return True
+    except UnicodeDecodeError:
+        return False
