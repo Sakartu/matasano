@@ -28,9 +28,18 @@ def main():
         decipher(tampered_ct, key)  # This is the receiver, he knows the key also
     except exceptions.InvalidPlaintextError as e:
         print('Decryption threw an error, we can now get the key')
-        # The attacker gets the error, which contains the broken plaintext, from which we can get the key:
+        # The attacker receives the error, which contains the broken plaintext, from which we can get the key:
         assert key == util.fixed_xor(e.invalid_plaintext[:16], e.invalid_plaintext[32:48])
         print('Key successfully extracted!')
+        # The reason this works is because:
+        # CT1' = AES(PT1 ^ K)
+        # CT2' = 0
+        # CT3' = AES(PT1 ^ K)
+        #
+        # PT1' = AES-1(AES(PT1 ^ K)) ^ K = PT1 ^ K ^ K = PT1
+        # PT2' = AES-1(AES(0)) ^ AES(PT1 ^ K) = AES(PT1 ^ K)
+        # PT3' = AES-1(AES(PT1 ^ K)) ^ 0 = PT1 ^ K
+        # PT1' ^ PT3' = PT1 ^ PT1 ^ K = K
 
 
 def cipher(plain, key):
