@@ -484,7 +484,7 @@ def sha1(message):
     Arguments:
         message: The input message string to hash.
     Returns:
-        A hex SHA-1 digest of the input message.
+        A hex SHA-1 digest of the input message (without 0x prepended, like hexdigest() from hashlib)
     """
     # Initialize variables:
     h0 = 0x67452301
