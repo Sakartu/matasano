@@ -9,6 +9,7 @@ Options:
 import base64
 
 from docopt import docopt
+
 import util
 
 __author__ = 'peter'

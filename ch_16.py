@@ -5,9 +5,8 @@ Usage:
 ch_16.py
 """
 from itertools import product
-
-from docopt import docopt
 import sys
+
 import util
 
 __author__ = 'peter'

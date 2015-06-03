@@ -4,8 +4,6 @@
 Usage:
 ch_23
 """
-import random
-import time
 
 from util import TwisterRandom
 

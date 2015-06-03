@@ -5,7 +5,9 @@ Usage:
 repeating_xor.py [--base64] KEY MSG...
 """
 import base64
+
 from docopt import docopt
+
 import util
 
 __author__ = 'peter'

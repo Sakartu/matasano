@@ -14,7 +14,6 @@ from docopt import docopt
 
 import util
 
-
 __author__ = 'peter'
 
 
@@ -30,7 +29,7 @@ def hamming_distance(cs):
     end = len(cs) - 1
     for idx in range(end):
         s1 = cs[idx]
-        s2 = cs[idx+1]
+        s2 = cs[idx + 1]
         assert len(s1) == len(s2)
         s1_bits = ''.join('{:b}'.format(c).zfill(8) for c in s1)
         s2_bits = ''.join('{:b}'.format(c).zfill(8) for c in s2)

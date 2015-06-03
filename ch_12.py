@@ -7,7 +7,9 @@ byte_by_byte_ecb.py
 Options:
 """
 import base64
+
 from Crypto.Cipher import AES
+
 import util
 
 __author__ = 'peter'
@@ -21,12 +23,13 @@ EXTRA_MSG = base64.b64decode('Um9sbGluJyBpbiBteSA1LjAKV2l0aCBteSByYWctdG9wIGRvd2
 def main():
     def cipher(data):
         return util.encryption_oracle(data, mode=AES.MODE_ECB, prepend=b'', append=EXTRA_MSG)[1]
+
     # Find the blocksize
     blocksize = util.detect_blocksize(cipher)
     print('Blocksize is', blocksize)
 
     # Find out whether the mode is ECB, if not, quit
-    if not util.detect_ecb(cipher(b'A'*500)):
+    if not util.detect_ecb(cipher(b'A' * 500)):
         print('Cipher doesn\'t use ECB mode!')
         return
     else:

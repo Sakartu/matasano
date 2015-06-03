@@ -6,6 +6,7 @@ single_byte_xor.py MSG...
 """
 from docopt import docopt
 from veryprettytable import VeryPrettyTable
+
 import util
 
 __author__ = 'peter'

@@ -5,7 +5,7 @@ Usage:
 ch_20
 """
 import base64
-import binascii
+
 import util
 
 __author__ = 'peter'

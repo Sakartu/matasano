@@ -8,6 +8,7 @@ from collections import defaultdict
 from operator import itemgetter
 import string
 import math
+
 from docopt import docopt
 from veryprettytable import VeryPrettyTable
 
@@ -51,7 +52,8 @@ def detect_msg(msg):
         d = distance(FREQUENCIES, result_freq[key])
         result_freq[key]['dist'] = d
 
-    return sorted([(chr(k), result_freq[k]['dist'], result_freq[k]['result']) for k in result_freq], key=itemgetter(1), reverse=True)
+    return sorted([(chr(k), result_freq[k]['dist'], result_freq[k]['result']) for k in result_freq], key=itemgetter(1),
+                  reverse=True)
 
 
 def main():

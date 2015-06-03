@@ -5,11 +5,10 @@ from operator import itemgetter
 import random
 import string
 import binascii
+import time
 
 from Crypto import Random
 from Crypto.Cipher import AES
-import time
-import struct
 
 from exceptions import PaddingError, NotSeededError
 

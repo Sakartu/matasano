@@ -7,6 +7,7 @@ detect_aes_ecb.py INFILE
 Options:
 """
 from docopt import docopt
+
 import util
 
 __author__ = 'peter'

@@ -8,7 +8,9 @@ Options:
 """
 import base64
 import random
+
 from Crypto.Cipher import AES
+
 import util
 
 __author__ = 'peter'

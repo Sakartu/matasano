@@ -5,7 +5,6 @@ Usage:
 test_pkcs7_depad.py
 """
 
-from docopt import docopt
 import util
 
 __author__ = 'peter'

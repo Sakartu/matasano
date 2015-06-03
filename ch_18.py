@@ -5,8 +5,8 @@ Usage:
 test_ctr.py
 """
 import base64
-import util
 
+import util
 
 __author__ = 'peter'
 

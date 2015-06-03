@@ -12,7 +12,6 @@ import util
 
 __author__ = 'peter'
 
-
 modes = {
     AES.MODE_ECB: 'ECB',
     AES.MODE_CBC: 'CBC',

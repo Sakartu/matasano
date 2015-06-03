@@ -9,7 +9,6 @@ import util
 
 __author__ = 'peter'
 
-
 data = [
     (b'YELLOW SUBMARINE', 16, b'\x10' * 16),
     (b'YELLOW SUBMARINE', 20, b'\x04' * 4),

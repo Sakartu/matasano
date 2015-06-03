@@ -35,7 +35,7 @@ def main():
 
     # Brute force the seed
     print('Cracking seed...')
-    for i in range(1000*1000):  # Try all seeds, for every millisecond in 1000 seconds
+    for i in range(1000 * 1000):  # Try all seeds, for every millisecond in 1000 seconds
         if v == TwisterRandom(current_time - i).extract_number():
             print('Successfully cracked, seed was {}!'.format(int(current_time - i)))
             break

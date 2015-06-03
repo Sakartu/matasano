@@ -7,6 +7,7 @@ fixed_xor.py S1 S2
 Options:
 """
 import binascii
+
 from docopt import docopt
 
 __author__ = 'peter'

@@ -9,7 +9,7 @@ Options:
 import base64
 
 from docopt import docopt
-from Crypto.Cipher import AES
+
 import util
 
 __author__ = 'peter'

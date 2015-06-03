@@ -8,6 +8,7 @@ from util import TwisterRandom
 
 __author__ = 'peter'
 
+
 def main():
     values = [int(x.strip()) for x in open('resources/ch_21.txt') if x]
     r = TwisterRandom(1)

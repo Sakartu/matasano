@@ -5,6 +5,7 @@ Usage:
 ch_19
 """
 import base64
+
 import util
 
 __author__ = 'peter'
@@ -23,7 +24,7 @@ def main():
     key = b'\n\xb9\\\x1a\xb8\xca\xe5\xa3e\xec\r\x03Aw\xc5P'
     stream = []
     for i in range(10):
-        stream.append(util.get_key_stream(b'\x00'*8, i, key))
+        stream.append(util.get_key_stream(b'\x00' * 8, i, key))
     print(stream[:3])
     # key = util.get_random_bytes(16)
     cts = get_ciphertexts(key)

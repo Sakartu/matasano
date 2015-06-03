@@ -13,7 +13,6 @@ import util
 
 __author__ = 'peter'
 
-
 PTS = [base64.b64decode(s) for s in
        ('MDAwMDAwTm93IHRoYXQgdGhlIHBhcnR5IGlzIGp1bXBpbmc=',
         'MDAwMDAxV2l0aCB0aGUgYmFzcyBraWNrZWQgaW4gYW5kIHRoZSBWZWdhJ3MgYXJlIHB1bXBpbic=',
@@ -42,7 +41,7 @@ def break_cbc():
     logging.info('IV: {} KEY: {}'.format(iv, key))
     logging.info('CT Blocks: {}'.format(ct_blocks))
     for i in range(len(ct_blocks)):
-        i_block.append([None]*blocksize)
+        i_block.append([None] * blocksize)
 
     for ct_block_idx, ct_block in enumerate(ct_blocks):
         logging.info('Working on block {0} ({1})'.format(ct_block_idx, ct_block))
@@ -54,7 +53,7 @@ def break_cbc():
             # Loop values for single byte that we're going to guess
             r = brute_single_byte(blocksize, iv, key, ct_idx, ct_block, known_values)
             if r is not None:
-                i_block[ct_block_idx][-ct_idx-1] = r
+                i_block[ct_block_idx][-ct_idx - 1] = r
                 ct_idx += 1
             else:
                 # We couldn't find a matching byte, so there was probably an "accidental" valid padding. This occurs

@@ -4,10 +4,7 @@
 Usage:
 ch_27.py
 """
-from itertools import product
 
-from docopt import docopt
-import sys
 import exceptions
 import util
 
