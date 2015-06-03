@@ -20,7 +20,7 @@ def main():
     print('Encrypting plaintext at sender side')
     ct = cipher(pt, key)  # This is the sender, he knows the key
     print('Tampering ciphertext at attacker side')
-    tampered_ct = ct[:16] + b'\x00' * 16 + ct[:16]  # This is the attacker
+    tampered_ct = ct[:16] + b'\x00' * 16 + ct[:16]  # This is the attacker, who doesn't know the key but can mitm
     assert len(ct) == len(tampered_ct)
     try:
         # There is a very high chance this will throw an error
