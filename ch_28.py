@@ -24,8 +24,10 @@ def main():
     hmac = util.sha_mac(msg, key)
     print('HMAC for random message is {}'.format(hmac))
     print('Testing message tampering')
-    assert hmac != util.sha_mac(util.fixed_xor(msg, util.get_random_bytes(len(msg))), key)
-    print('Message tamper test succeeded, testing hmac creation')
+    for m in (util.get_random_bytes(len(msg)) for _ in range(1000)):
+        assert hmac != util.sha_mac(util.fixed_xor(msg, m), key)
+    print('Message tamper test succeeded, could not create same HMAC in 1000 tries')
+    print('Testing hmac creation')
     for k in (util.get_random_bytes(16) for _ in range(1000)):
         assert hmac != util.sha_mac(msg, k)
     print('HMAC could not be reproduced in 1000 tries with random keys, test succeeded')
