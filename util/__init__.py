@@ -476,22 +476,19 @@ def left_rotate(n, b):
     return ((n << b) | (n >> (32 - b))) & 0xffffffff
 
 
-def sha1(message):
+def sha1(message, h0=0x67452301, h1=0xEFCDAB89, h2=0x98BADCFE, h3=0x10325476, h4=0xC3D2E1F0):
     """SHA-1 Hashing Function
     A custom SHA-1 hashing function implemented entirely in Python.
     Found this at https://github.com/ajalt/python-sha1 and adapted to use more modern python3 constructs
 
-    Arguments:
-        message: The input message string to hash.
-    Returns:
-        A hex SHA-1 digest of the input message (without 0x prepended, like hexdigest() from hashlib)
+    :param message: The input message string to hash.
+    :param h0: The first inner state of the SHA1 function. This defaults to magic number 0x67452301, per spec
+    :param h1: The second inner state of the SHA1 function. This defaults to magic number 0xEFCDAB89, per spec
+    :param h2: The third inner state of the SHA1 function. This defaults to magic number 0x98BADCFE, per spec
+    :param h3: The fourth inner state of the SHA1 function. This defaults to magic number 0x10325476, per spec
+    :param h4: The fifth inner state of the SHA1 function. This defaults to magic number 0xC3D2E1F0, per spec
+    :returns: A hex SHA-1 digest of the input message (without 0x prepended, like hexdigest() from hashlib)
     """
-    # Initialize variables:
-    h0 = 0x67452301
-    h1 = 0xEFCDAB89
-    h2 = 0x98BADCFE
-    h3 = 0x10325476
-    h4 = 0xC3D2E1F0
 
     # Pre-processing:
     original_byte_len = len(message)
@@ -514,11 +511,7 @@ def sha1(message):
             w.append(left_rotate(w[i] ^ w[i + 2] ^ w[i + 8] ^ w[i + 13], 1))
 
         # Initialize hash value for this chunk:
-        a = h0
-        b = h1
-        c = h2
-        d = h3
-        e = h4
+        a, b, c, d, e = h0, h1, h2, h3, h4
 
         for i in range(80):
             if 0 <= i <= 19:
@@ -546,6 +539,11 @@ def sha1(message):
 
     # Produce the final hash value (big-endian):
     return '{:08x}{:08x}{:08x}{:08x}{:08x}'.format(h0, h1, h2, h3, h4)
+
+
+def sha1_padding(msg):
+    bytelen = len(msg)
+    return b'\x80' + b'\x00' * ((56 - (len(msg) + 1) % 64) % 64) + ((bytelen * 8).to_bytes(8, 'big'))
 
 
 def sha_mac(msg, key):
