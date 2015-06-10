@@ -13,7 +13,7 @@ import util
 __author__ = 'peter'
 
 
-KEYLEN = 10
+KEYLEN = 200
 
 
 def main():
