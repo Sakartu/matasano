@@ -21,16 +21,16 @@ def main():
 
     msg = util.get_random_bytes(random.randint(0, 1000))
     key = util.get_random_bytes(16)
-    hmac = util.sha_mac(msg, key)
-    print('HMAC for random message is {}'.format(hmac))
+    mac = util.sha_mac(msg, key)
+    print('MAC for random message is {}'.format(mac))
     print('Testing message tampering')
     for m in (util.get_random_bytes(len(msg)) for _ in range(1000)):
-        assert hmac != util.sha_mac(util.fixed_xor(msg, m), key)
-    print('Message tamper test succeeded, could not create same HMAC in 1000 tries')
-    print('Testing hmac creation')
+        assert mac != util.sha_mac(util.fixed_xor(msg, m), key)
+    print('Message tamper test succeeded, could not create same MAC in 1000 tries')
+    print('Testing MAC creation')
     for k in (util.get_random_bytes(16) for _ in range(1000)):
-        assert hmac != util.sha_mac(msg, k)
-    print('HMAC could not be reproduced in 1000 tries with random keys, test succeeded')
+        assert mac != util.sha_mac(msg, k)
+    print('MAC could not be reproduced in 1000 tries with random keys, test succeeded')
 
 
 if __name__ == '__main__':
