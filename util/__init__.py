@@ -472,8 +472,13 @@ def is_ascii(b):
         return False
 
 
-def left_rotate(n, b):
-    return ((n << b) | (n >> (32 - b))) & 0xffffffff
+def left_rotate(num, bits):
+    """
+    The left rotate function as described in the SHA specification
+    :param num: The number to rotate
+    :param bits: The number of bits to rotate num
+    """
+    return ((num << bits) | (num >> (32 - bits))) & 0xffffffff
 
 
 def sha1(message, original_byte_len=None, state=(0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0)):
