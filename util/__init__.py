@@ -476,31 +476,25 @@ def left_rotate(n, b):
     return ((n << b) | (n >> (32 - b))) & 0xffffffff
 
 
-def sha1(message, h0=0x67452301, h1=0xEFCDAB89, h2=0x98BADCFE, h3=0x10325476, h4=0xC3D2E1F0):
-    """SHA-1 Hashing Function
+def sha1(message, original_byte_len=None, state=(0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0)):
+    """
+    SHA-1 Hashing Function
+
     A custom SHA-1 hashing function implemented entirely in Python.
     Found this at https://github.com/ajalt/python-sha1 and adapted to use more modern python3 constructs
 
     :param message: The input message string to hash.
-    :param h0: The first inner state of the SHA1 function. This defaults to magic number 0x67452301, per spec
-    :param h1: The second inner state of the SHA1 function. This defaults to magic number 0xEFCDAB89, per spec
-    :param h2: The third inner state of the SHA1 function. This defaults to magic number 0x98BADCFE, per spec
-    :param h3: The fourth inner state of the SHA1 function. This defaults to magic number 0x10325476, per spec
-    :param h4: The fifth inner state of the SHA1 function. This defaults to magic number 0xC3D2E1F0, per spec
+    :param state: A five-tuple containing the values for the inner state h0 upto h4. defaults to
+        (0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0)
+    :param original_byte_len: A function to override the original_byte_len, used when tampering SHA hashes
     :returns: A hex SHA-1 digest of the input message (without 0x prepended, like hexdigest() from hashlib)
     """
 
     # Pre-processing:
-    original_byte_len = len(message)
-    original_bit_len = original_byte_len * 8
-    # append the bit '1' to the message
-    message += b'\x80'
+    message += sha1_padding(original_byte_len or len(message))
 
-    # append 0 <= k < 512 bits '0', so that the resulting message length (in bits) is congruent to 448 (mod 512)
-    message += b'\x00' * ((56 - (original_byte_len + 1) % 64) % 64)
+    h0, h1, h2, h3, h4 = state
 
-    # append length of message (before pre-processing), in bits, as 64-bit big-endian integer
-    message += original_bit_len.to_bytes(8, 'big')
     # Process the message in successive 512-bit (64 byte) chunks:
     for chunk in chunks(message, 64):
         # break chunk into sixteen 32-bit (4 byte) big-endian words
@@ -541,10 +535,46 @@ def sha1(message, h0=0x67452301, h1=0xEFCDAB89, h2=0x98BADCFE, h3=0x10325476, h4
     return '{:08x}{:08x}{:08x}{:08x}{:08x}'.format(h0, h1, h2, h3, h4)
 
 
-def sha1_padding(msg):
-    bytelen = len(msg)
-    return b'\x80' + b'\x00' * ((56 - (len(msg) + 1) % 64) % 64) + ((bytelen * 8).to_bytes(8, 'big'))
+def sha1_padding(msglen):
+    """
+    Calculate the SHA1 padding for the given message length. This returns a bytes object with the following:
+
+    - a 1 bit, 0x80
+    - 0 <= k < 512 bits '0', so that the resulting message length (in bits) is congruent to 448 (mod 512)
+        this leaves 64 bits for the length (see below) to make it 512 bits long in total
+    - length of message (before pre-processing), in bits, as 64-bit big-endian integer
+
+    :param msglen: The length of the message to create the padding for
+    :return: The padding as specified above
+    """
+    return b'\x80' + b'\x00' * ((56 - (msglen + 1) % 64) % 64) + ((msglen * 8).to_bytes(8, 'big'))
 
 
 def sha_mac(msg, key):
+    """
+    Create a MAC (message authentication code) for the given message and key. This basically calculates SHA1(key || msg)
+
+    :param msg: The message to create the MAC for
+    :param key: The key to create the MAC with
+    :return: a MAC created for the given message with the given key
+    """
     return sha1(key + msg)
+
+
+def hex_table(msg, l=0x10):
+    """
+    Format the given message as a hex table, such as the output of hd, hexdump or xxd
+    :param msg: The message to format
+    :param l: The length of the
+    :return:
+    """
+    maxlen = 4
+    while (16 ** maxlen) < len(msg):
+        maxlen += 1
+
+    result = ""
+    for i, c in enumerate(chunks(msg, l)):
+        s = ''.join(chr(x) if 32 <= x <= 126 else '.' for x in c)
+        h = ' '.join('{:02x}'.format(x) for x in c)
+        result += "{:0{}x}  {:{}s}  {}\n".format(i * l, maxlen, h, (l - 1) * 3 + 2, s)
+    return result
