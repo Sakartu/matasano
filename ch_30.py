@@ -17,6 +17,7 @@ KEYLEN = 10
 
 
 def main():
+    print('Testing pure-python MD4 implementation')
     assert util.md4(b'') == b'31d6cfe0d16ae931b73c59d7e0c089c0'
     assert util.md4(b'a') == b'bde52cb31de33e46245e05fbdbd6fb24'
     assert util.md4(b'abc') == b'a448017aaf21d8525fc10ae87aa6729d'
@@ -26,6 +27,7 @@ def main():
             b'043f8582f241db351ce627e153e7f0e4')
     assert (util.md4(b'12345678901234567890123456789012345678901234567890123456789012345678901234567890') ==
             b'e33b4ddc9c38f2199c3e7b164fcc0536')
+    print('Pure-python MD4 seems to perform correctly')
 
     # Both msg and hash are known to the attacker
     # msg = b"comment1=cooking%20MCs;userdata=foo;comment2=%20like%20a%20pound%20of%20bacon"
