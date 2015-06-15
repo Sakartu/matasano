@@ -478,7 +478,7 @@ def left_rotate(num, bits):
     :param num: The number to rotate
     :param bits: The number of bits to rotate num
     """
-    return ((num << bits) | (num >> (32 - bits))) & 0xffffffff
+    return ((num << bits) | ((num & 0xffffffff) >> (32 - bits))) & 0xffffffff
 
 
 def sha1(message, original_byte_len=None, state=(0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0)):
@@ -564,6 +564,141 @@ def sha_mac(msg, key):
     :return: a MAC created for the given message with the given key
     """
     return sha1(key + msg)
+
+
+
+def md4_padding(msglen):
+    """
+    Calculate the MD4 padding for the given message length. This returns a bytes object with the following:
+
+    - a 1 bit, 0x80
+    - 0 <= k < 512 bits '0', so that the resulting message length (in bits) is congruent to 448 (mod 512)
+        this leaves 64 bits for the length (see below) to make it 512 bits long in total
+    - length of message (before pre-processing), in bits, as 64-bit big-endian integer
+
+    :param msglen: The length of the message to create the padding for
+    :return: The padding as specified above
+    """
+    return b'\x80' + b'\x00' * ((56 - (msglen + 1) % 64) % 64) + (msglen * 8).to_bytes(8, 'little')
+
+
+def md4(msg, original_byte_len=None, state=(0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476)):
+    """
+    MD4 Hashing Function
+
+    A custom MD4 hashing function implemented entirely in Python.
+    Found parts of this at http://www.acooke.org/cute/PurePython0.html, but added a lot of code myself
+
+    :param msg: The input message string to hash.
+    :param original_byte_len: A function to override the original_byte_len, used when tampering MD4 hashes
+    :param state: A five-tuple containing the values for the inner state a, b, c and d. defaults to
+        (0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476)
+    :returns: A hex MD4 digest of the input message (without 0x prepended, like hexdigest() from hashlib)
+    """
+    f = lambda x, y, z: (x & y) | (~x & z)
+    g = lambda x, y, z: (x & y) | (x & z) | (y & z)
+    h = lambda x, y, z: x ^ y ^ z
+    # Add padding
+    msg += md4_padding(original_byte_len or len(msg))
+
+    a, b, c, d = state
+
+    for chunk in chunks(msg, 64):
+        x = [int.from_bytes(word, 'little') for word in chunks(chunk, 4)]
+
+        aa = a
+        bb = b
+        cc = c
+        dd = d
+
+        round_1 = lambda a, b, c, d, k, s: left_rotate(a + f(b, c, d) + x[k], s)
+        # [ABCD  0  3]  [DABC  1  7]  [CDAB  2 11]  [BCDA  3 19]
+        # [ABCD  4  3]  [DABC  5  7]  [CDAB  6 11]  [BCDA  7 19]
+        # [ABCD  8  3]  [DABC  9  7]  [CDAB 10 11]  [BCDA 11 19]
+        # [ABCD 12  3]  [DABC 13  7]  [CDAB 14 11]  [BCDA 15 19]
+        a = round_1(a, b, c, d, 0, 3)
+        d = round_1(d, a, b, c, 1, 7)
+        c = round_1(c, d, a, b, 2, 11)
+        b = round_1(b, c, d, a, 3, 19)
+
+        a = round_1(a, b, c, d, 4, 3)
+        d = round_1(d, a, b, c, 5, 7)
+        c = round_1(c, d, a, b, 6, 11)
+        b = round_1(b, c, d, a, 7, 19)
+
+        a = round_1(a, b, c, d, 8, 3)
+        d = round_1(d, a, b, c, 9, 7)
+        c = round_1(c, d, a, b, 10, 11)
+        b = round_1(b, c, d, a, 11, 19)
+
+        a = round_1(a, b, c, d, 12, 3)
+        d = round_1(d, a, b, c, 13, 7)
+        c = round_1(c, d, a, b, 14, 11)
+        b = round_1(b, c, d, a, 15, 19)
+
+        round_2 = lambda a, b, c, d, k, s: left_rotate(a + g(b, c, d) + x[k] + 0x5a827999, s)
+        # [ABCD  0  3]  [DABC  4  5]  [CDAB  8  9]  [BCDA 12 13]
+        # [ABCD  1  3]  [DABC  5  5]  [CDAB  9  9]  [BCDA 13 13]
+        # [ABCD  2  3]  [DABC  6  5]  [CDAB 10  9]  [BCDA 14 13]
+        # [ABCD  3  3]  [DABC  7  5]  [CDAB 11  9]  [BCDA 15 13]
+
+        a = round_2(a, b, c, d, 0, 3)
+        d = round_2(d, a, b, c, 4, 5)
+        c = round_2(c, d, a, b, 8, 9)
+        b = round_2(b, c, d, a, 12, 13)
+
+        a = round_2(a, b, c, d, 1, 3)
+        d = round_2(d, a, b, c, 5, 5)
+        c = round_2(c, d, a, b, 9, 9)
+        b = round_2(b, c, d, a, 13, 13)
+
+        a = round_2(a, b, c, d, 2, 3)
+        d = round_2(d, a, b, c, 6, 5)
+        c = round_2(c, d, a, b, 10, 9)
+        b = round_2(b, c, d, a, 14, 13)
+
+        a = round_2(a, b, c, d, 3, 3)
+        d = round_2(d, a, b, c, 7, 5)
+        c = round_2(c, d, a, b, 11, 9)
+        b = round_2(b, c, d, a, 15, 13)
+
+        round_3 = lambda a, b, c, d, k, s: left_rotate(a + h(b, c, d) + x[k] + 0x6ed9eba1, s)
+        # [ABCD  0  3]  [DABC  8  9]  [CDAB  4 11]  [BCDA 12 15]
+        # [ABCD  2  3]  [DABC 10  9]  [CDAB  6 11]  [BCDA 14 15]
+        # [ABCD  1  3]  [DABC  9  9]  [CDAB  5 11]  [BCDA 13 15]
+        # [ABCD  3  3]  [DABC 11  9]  [CDAB  7 11]  [BCDA 15 15]
+
+        a = round_3(a, b, c, d, 0, 3)
+        d = round_3(d, a, b, c, 8, 9)
+        c = round_3(c, d, a, b, 4, 11)
+        b = round_3(b, c, d, a, 12, 15)
+
+        a = round_3(a, b, c, d, 2, 3)
+        d = round_3(d, a, b, c, 10, 9)
+        c = round_3(c, d, a, b, 6, 11)
+        b = round_3(b, c, d, a, 14, 15)
+
+        a = round_3(a, b, c, d, 1, 3)
+        d = round_3(d, a, b, c, 9, 9)
+        c = round_3(c, d, a, b, 5, 11)
+        b = round_3(b, c, d, a, 13, 15)
+
+        a = round_3(a, b, c, d, 3, 3)
+        d = round_3(d, a, b, c, 11, 9)
+        c = round_3(c, d, a, b, 7, 11)
+        b = round_3(b, c, d, a, 15, 15)
+
+        a += aa
+        b += bb
+        c += cc
+        d += dd
+
+    a = (a & 0xffffffff).to_bytes(4, 'little')
+    b = (b & 0xffffffff).to_bytes(4, 'little')
+    c = (c & 0xffffffff).to_bytes(4, 'little')
+    d = (d & 0xffffffff).to_bytes(4, 'little')
+
+    return binascii.hexlify(a + b + c + d)
 
 
 def hex_table(msg, l=0x10):
