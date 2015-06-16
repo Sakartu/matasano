@@ -587,7 +587,8 @@ def md4(msg, original_byte_len=None, state=(0x67452301, 0xefcdab89, 0x98badcfe, 
     MD4 Hashing Function
 
     A custom MD4 hashing function implemented entirely in Python.
-    Found parts of this at http://www.acooke.org/cute/PurePython0.html, but added a lot of code myself
+    Found parts of this at http://www.acooke.org/cute/PurePython0.html, but added a lot of code myself.
+    Also added the possibility of providing the state, making length extension attacks easier.
 
     :param msg: The input message string to hash.
     :param original_byte_len: A function to override the original_byte_len, used when tampering MD4 hashes
