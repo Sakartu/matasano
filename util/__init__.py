@@ -21,7 +21,7 @@ FREQUENCIES = {
 GLOBAL_KEY = Random.new().read(16)
 
 
-def single_char_xor_decrypt(msg, freq=FREQUENCIES, filter_non_printable=True):
+def single_char_xor_decrypt(msg, freq=FREQUENCIES, filter_non_printable=True) -> list:
     """
     Try to decrypt the given message which is assumed to be encrypted using a single-character XOR encryption. We use
     the frequency table above, giving the letter frequencies of the English language, to find the most-likely key
@@ -54,7 +54,7 @@ def single_char_xor_decrypt(msg, freq=FREQUENCIES, filter_non_printable=True):
                   reverse=True)
 
 
-def bhattacharyya_distance(d1, d2):
+def bhattacharyya_distance(d1, d2) -> int:
     """
     Calculate the Bhattacharyya coefficient for the two given frequency dicts. Assumes all keys in d1 are also in d2.
     A higher coefficient means that both dicts are more equal.
@@ -65,7 +65,7 @@ def bhattacharyya_distance(d1, d2):
     return sum(math.sqrt(d1[k] * d2[k]) for k in d1)
 
 
-def text_frequencies(text):
+def text_frequencies(text) -> OrderedDict:
     """
     Calculate the frequencies of each character in bytes() object text.
     :param text: The text to calculate character frequencies for
@@ -75,7 +75,7 @@ def text_frequencies(text):
     return OrderedDict(s)
 
 
-def repeating_xor_decrypt(key, msg):
+def repeating_xor_decrypt(key, msg) -> bytes:
     repeating_key = cycle(key)
     result = ''
     for k, c in zip(repeating_key, msg):
@@ -92,13 +92,13 @@ def chunks(l, n, num=None):
             return
 
 
-def aes_ecb_encrypt(data, key, pad=True):
+def aes_ecb_encrypt(data, key, pad=True) -> bytes:
     if pad:
         data = pkcs7_pad(data)
     return AES.new(key, AES.MODE_ECB).encrypt(data)
 
 
-def aes_ecb_decrypt(data, key, depad=True):
+def aes_ecb_decrypt(data, key, depad=True) -> bytes:
     try:
         r = AES.new(key, AES.MODE_ECB).decrypt(data)
     except ValueError:
@@ -106,14 +106,14 @@ def aes_ecb_decrypt(data, key, depad=True):
     return pkcs7_depad(r) if depad else r
 
 
-def pkcs7_pad(data, block_size=16):
+def pkcs7_pad(data, block_size=16) -> bytes:
     l = len(data)
     count = block_size - (l % block_size)
     assert (l + count) % block_size == 0
     return bytes(data) + bytes(count.to_bytes(1, 'big') * count)
 
 
-def pkcs7_depad(data):
+def pkcs7_depad(data) -> bytes:
     last = data[-1]
     if last > 0 and data.endswith(last.to_bytes(1, 'big') * last):
         return data[:-last]
@@ -121,7 +121,7 @@ def pkcs7_depad(data):
         raise PaddingError()
 
 
-def fixed_xor(ba1, ba2):
+def fixed_xor(ba1, ba2) -> bytes:
     """
     byte-wise XOR all entries of ba1 with entries from ba2. If ba2 is longer than ba1, the remaining entries will be
     ignored.
@@ -132,7 +132,7 @@ def fixed_xor(ba1, ba2):
     return bytes(b1 ^ b2 for b1, b2 in zip(ba1, ba2))
 
 
-def aes_cbc_decrypt(ct, key, iv=b'\x00' * 16, depad=True, verbose=False):
+def aes_cbc_decrypt(ct, key, iv=b'\x00' * 16, depad=True, verbose=False) -> bytes:
     if verbose:
         print('d, len(ct):', len(ct))
     blocks = list(chunks(ct, 16))
@@ -152,7 +152,7 @@ def aes_cbc_decrypt(ct, key, iv=b'\x00' * 16, depad=True, verbose=False):
         return result
 
 
-def aes_cbc_encrypt(data, key, iv=b'\x00' * 16, pad=True, verbose=False):
+def aes_cbc_encrypt(data, key, iv=b'\x00' * 16, pad=True, verbose=False) -> bytes:
     if verbose:
         print('e, len(data):', len(data))
     if pad:
@@ -175,7 +175,7 @@ def aes_cbc_encrypt(data, key, iv=b'\x00' * 16, pad=True, verbose=False):
     return ct
 
 
-def get_random_bytes(length=1):
+def get_random_bytes(length=1) -> bytes:
     """
     Return length (default 1) random bytes
     :param length: The number of bytes to return
@@ -184,7 +184,7 @@ def get_random_bytes(length=1):
     return Random.new().read(length)
 
 
-def encryption_oracle(data, key=GLOBAL_KEY, mode=None, prepend=None, append=None):
+def encryption_oracle(data, key=GLOBAL_KEY, mode=None, prepend=None, append=None) -> (int, bytes):
     if prepend is None:
         # If prepend isn't given, prepend between 5 and 10 random bytes
         prepend = get_random_bytes(random.randint(5, 10))
@@ -206,19 +206,19 @@ def encryption_oracle(data, key=GLOBAL_KEY, mode=None, prepend=None, append=None
     return mode, ct
 
 
-def detect_ecb(ct):
+def detect_ecb(ct) -> bool:
     cs = list(chunks(ct, 16))
     return len(set(cs)) != len(cs)
 
 
-def detect_ecb_or_cbc(ct):
+def detect_ecb_or_cbc(ct) -> int:
     if detect_ecb(ct):
         return AES.MODE_ECB
     else:
         return AES.MODE_CBC
 
 
-def detect_blocksize(cipher):
+def detect_blocksize(cipher) -> int:
     # See if cipher is stable
     stable = True
     l = len(cipher(b'A'))
@@ -239,7 +239,7 @@ def detect_blocksize(cipher):
         raise ValueError('Cipher is unstable, can\'t find blocksize!')
 
 
-def find_repeating_block(ct, bs, minlen=2):
+def find_repeating_block(ct, bs, minlen=2) -> list:
     cs = list(chunks(ct, bs))
     begin = 1
     blocks = []
@@ -256,7 +256,7 @@ def find_repeating_block(ct, bs, minlen=2):
     return blocks
 
 
-def to_hex(o):
+def to_hex(o) -> str:
     """
     A function to pretty-print the object o in a form of \\xff
     :param o: This can be either a bytes() object (where each character will be printed in byte-representation), an int,
@@ -275,12 +275,12 @@ def to_hex(o):
     return '\\x' + '\\x'.join(a + b for a, b in zip(i, i))
 
 
-def get_key_stream(nonce, ctr, key):
+def get_key_stream(nonce, ctr, key) -> bytes:
     # Use a 64 bit unsigned little endian nonce and a 64 bit little endian block count
     return aes_ecb_encrypt(nonce + ctr.to_bytes(8, 'little'), key, pad=False)
 
 
-def aes_ctr_encrypt(data, key, nonce=b'\x00' * 8, debug=False):
+def aes_ctr_encrypt(data, key, nonce=b'\x00' * 8, debug=False) -> bytes:
     ctr = 0
     result = b''
     for b in chunks(data, 16):
@@ -292,11 +292,11 @@ def aes_ctr_encrypt(data, key, nonce=b'\x00' * 8, debug=False):
     return result
 
 
-def aes_ctr_decrypt(data, key, nonce=b'\x00' * 8, debug=False):
+def aes_ctr_decrypt(data, key, nonce=b'\x00' * 8, debug=False) -> bytes:
     return aes_ctr_encrypt(data, key, nonce, debug)
 
 
-def aes_ctr_edit(ct, key, offset, newtext, nonce=b'\x00' * 8, debug=False):
+def aes_ctr_edit(ct, key, offset, newtext, nonce=b'\x00' * 8, debug=False) -> bytes:
     orig_pt = aes_ctr_decrypt(ct, key, nonce, debug)
     new_pt = orig_pt[:offset] + newtext
     return aes_ctr_encrypt(new_pt, key, nonce, debug)
@@ -397,12 +397,12 @@ class TwisterRandom:
                 self.mt[i] ^= 2567483615  # 0x9908b0df
 
 
-def get_password_reset_token():
+def get_password_reset_token() -> bytes:
     # Just use some random bytes, encrypted using mt_encrypt with time.time() as seed
     return mt_encrypt(get_random_bytes(24) + b'PASSWORD TOKEN', time.time())
 
 
-def test_password_reset_token(data, t):
+def test_password_reset_token(data, t) -> bool:
     for k in range(int(t), int(t) - 1000 * 60 * 2, -1):  # Try all millisecond values between t and (t-2 min.)
         pt = mt_decrypt(data, k)
         if pt.endswith(b'PASSWORD TOKEN'):
@@ -410,7 +410,7 @@ def test_password_reset_token(data, t):
     return False
 
 
-def mt_encrypt(data, seed):
+def mt_encrypt(data, seed) -> bytes:
     r = TwisterRandom(seed)
     result = b''
     for b in chunks(data, 4):
@@ -419,7 +419,7 @@ def mt_encrypt(data, seed):
     return result
 
 
-def mt_decrypt(data, seed):
+def mt_decrypt(data, seed) -> bytes:
     return mt_encrypt(data, seed)
 
 
@@ -464,7 +464,7 @@ class Profile:
         return str(vars(self))
 
 
-def is_ascii(b):
+def is_ascii(b) -> bool:
     try:
         b.decode('ascii')
         return True
@@ -472,16 +472,17 @@ def is_ascii(b):
         return False
 
 
-def left_rotate(num, bits):
+def left_rotate(num, bits) -> int:
     """
     The left rotate function as described in the SHA specification
     :param num: The number to rotate
     :param bits: The number of bits to rotate num
+    :type bits: int
     """
     return ((num << bits) | ((num & 0xffffffff) >> (32 - bits))) & 0xffffffff
 
 
-def sha1(message, original_byte_len=None, state=(0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0)):
+def sha1(message, original_byte_len=None, state=(0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0)) -> bytes:
     """
     SHA-1 Hashing Function
 
@@ -540,7 +541,7 @@ def sha1(message, original_byte_len=None, state=(0x67452301, 0xEFCDAB89, 0x98BAD
     return '{:08x}{:08x}{:08x}{:08x}{:08x}'.format(h0, h1, h2, h3, h4)
 
 
-def sha1_padding(msglen):
+def sha1_padding(msglen) -> bytes:
     """
     Calculate the SHA1 padding for the given message length. This returns a bytes object with the following:
 
@@ -552,10 +553,11 @@ def sha1_padding(msglen):
     :param msglen: The length of the message to create the padding for
     :return: The padding as specified above
     """
-    return b'\x80' + b'\x00' * ((56 - (msglen + 1) % 64) % 64) + ((msglen * 8).to_bytes(8, 'big'))
+    bitlen = msglen * 8
+    return b'\x80' + b'\x00' * ((56 - (msglen + 1) % 64) % 64) + (bitlen.to_bytes(8, 'big'))
 
 
-def sha_mac(msg, key):
+def sha_mac(msg, key) -> bytes:
     """
     Create a MAC (message authentication code) for the given message and key. This basically calculates SHA1(key || msg)
 
@@ -566,8 +568,7 @@ def sha_mac(msg, key):
     return sha1(key + msg)
 
 
-
-def md4_padding(msglen):
+def md4_padding(msglen) -> bytes:
     """
     Calculate the MD4 padding for the given message length. This returns a bytes object with the following:
 
@@ -579,10 +580,11 @@ def md4_padding(msglen):
     :param msglen: The length of the message to create the padding for
     :return: The padding as specified above
     """
-    return b'\x80' + b'\x00' * ((56 - (msglen + 1) % 64) % 64) + (msglen * 8).to_bytes(8, 'little')
+    bitlen = msglen * 8
+    return b'\x80' + b'\x00' * ((56 - (msglen + 1) % 64) % 64) + bitlen.to_bytes(8, 'little')
 
 
-def md4(msg, original_byte_len=None, state=(0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476)):
+def md4(msg, original_byte_len=None, state=(0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476)) -> bytes:
     """
     MD4 Hashing Function
 
@@ -702,7 +704,18 @@ def md4(msg, original_byte_len=None, state=(0x67452301, 0xefcdab89, 0x98badcfe, 
     return binascii.hexlify(a + b + c + d)
 
 
-def hex_table(msg, l=0x10):
+def md4_mac(msg, key) -> bytes:
+    """
+    Create a MAC (message authentication code) for the given message and key. This basically calculates MD4(key || msg)
+
+    :param msg: The message to create the MAC for
+    :param key: The key to create the MAC with
+    :return: a MAC created for the given message with the given key
+    """
+    return md4(key + msg)
+
+
+def hex_table(msg, l=0x10) -> str:
     """
     Format the given message as a hex table, such as the output of hd, hexdump or xxd
     :param msg: The message to format
