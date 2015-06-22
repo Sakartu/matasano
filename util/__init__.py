@@ -21,6 +21,10 @@ FREQUENCIES = {
 GLOBAL_KEY = Random.new().read(16)
 
 
+SHA1_BLOCKSIZE = 64
+MD4_BLOCKSIZE = 64
+
+
 def single_char_xor_decrypt(msg, freq=FREQUENCIES, filter_non_printable=True) -> list:
     """
     Try to decrypt the given message which is assumed to be encrypted using a single-character XOR encryption. We use
@@ -502,7 +506,7 @@ def sha1(message, original_byte_len=None, state=(0x67452301, 0xEFCDAB89, 0x98BAD
     h0, h1, h2, h3, h4 = state
 
     # Process the message in successive 512-bit (64 byte) chunks:
-    for chunk in chunks(message, 64):
+    for chunk in chunks(message, SHA1_BLOCKSIZE):
         # break chunk into sixteen 32-bit (4 byte) big-endian words
         w = [int.from_bytes(word, 'big') for word in chunks(chunk, 4)]
 
@@ -538,7 +542,7 @@ def sha1(message, original_byte_len=None, state=(0x67452301, 0xEFCDAB89, 0x98BAD
         h4 = (h4 + e) & 0xffffffff
 
     # Produce the final hash value (big-endian):
-    return '{:08x}{:08x}{:08x}{:08x}{:08x}'.format(h0, h1, h2, h3, h4)
+    return b''.join(map(lambda x: x.to_bytes(4, 'big'), (h0, h1, h2, h3, h4)))
 
 
 def sha1_padding(msglen) -> bytes:
@@ -554,10 +558,10 @@ def sha1_padding(msglen) -> bytes:
     :return: The padding as specified above
     """
     bitlen = msglen * 8
-    return b'\x80' + b'\x00' * ((56 - (msglen + 1) % 64) % 64) + (bitlen.to_bytes(8, 'big'))
+    return b'\x80' + b'\x00' * ((56 - (msglen + 1) % SHA1_BLOCKSIZE) % SHA1_BLOCKSIZE) + (bitlen.to_bytes(8, 'big'))
 
 
-def sha_mac(msg, key) -> bytes:
+def sha1_mac(msg, key) -> bytes:
     """
     Create a MAC (message authentication code) for the given message and key. This basically calculates SHA1(key || msg)
 
@@ -581,7 +585,7 @@ def md4_padding(msglen) -> bytes:
     :return: The padding as specified above
     """
     bitlen = msglen * 8
-    return b'\x80' + b'\x00' * ((56 - (msglen + 1) % 64) % 64) + bitlen.to_bytes(8, 'little')
+    return b'\x80' + b'\x00' * ((56 - (msglen + 1) % MD4_BLOCKSIZE) % MD4_BLOCKSIZE) + bitlen.to_bytes(8, 'little')
 
 
 def md4(msg, original_byte_len=None, state=(0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476)) -> bytes:
@@ -606,7 +610,7 @@ def md4(msg, original_byte_len=None, state=(0x67452301, 0xefcdab89, 0x98badcfe, 
 
     a, b, c, d = state
 
-    for chunk in chunks(msg, 64):
+    for chunk in chunks(msg, MD4_BLOCKSIZE):
         x = [int.from_bytes(word, 'little') for word in chunks(chunk, 4)]
 
         aa = a
@@ -701,7 +705,7 @@ def md4(msg, original_byte_len=None, state=(0x67452301, 0xefcdab89, 0x98badcfe, 
     c = (c & 0xffffffff).to_bytes(4, 'little')
     d = (d & 0xffffffff).to_bytes(4, 'little')
 
-    return binascii.hexlify(a + b + c + d)
+    return b''.join((a, b, c, d))
 
 
 def md4_mac(msg, key) -> bytes:

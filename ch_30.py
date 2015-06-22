@@ -18,15 +18,16 @@ KEYLEN = 10
 
 def main():
     print('Testing pure-python MD4 implementation')
-    assert util.md4(b'') == b'31d6cfe0d16ae931b73c59d7e0c089c0'
-    assert util.md4(b'a') == b'bde52cb31de33e46245e05fbdbd6fb24'
-    assert util.md4(b'abc') == b'a448017aaf21d8525fc10ae87aa6729d'
-    assert util.md4(b'message digest') == b'd9130a8164549fe818874806e1c7014b'
-    assert util.md4(b'abcdefghijklmnopqrstuvwxyz') == b'd79e1c308aa5bbcdeea8ed63df412da9'
+    uh = binascii.unhexlify
+    assert util.md4(b'') == uh(b'31d6cfe0d16ae931b73c59d7e0c089c0')
+    assert util.md4(b'a') == uh(b'bde52cb31de33e46245e05fbdbd6fb24')
+    assert util.md4(b'abc') == uh(b'a448017aaf21d8525fc10ae87aa6729d')
+    assert util.md4(b'message digest') == uh(b'd9130a8164549fe818874806e1c7014b')
+    assert util.md4(b'abcdefghijklmnopqrstuvwxyz') == uh(b'd79e1c308aa5bbcdeea8ed63df412da9')
     assert (util.md4(b'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789') ==
-            b'043f8582f241db351ce627e153e7f0e4')
+            uh(b'043f8582f241db351ce627e153e7f0e4'))
     assert (util.md4(b'12345678901234567890123456789012345678901234567890123456789012345678901234567890') ==
-            b'e33b4ddc9c38f2199c3e7b164fcc0536')
+            uh(b'e33b4ddc9c38f2199c3e7b164fcc0536'))
     print('Pure-python MD4 seems to perform correctly')
 
     # Both msg and hash are known to the attacker
@@ -36,7 +37,7 @@ def main():
     print('MAC is {}'.format(mac))
 
     # Break msg into 32-bit chunks
-    states = [int.from_bytes(c, 'little') for c in util.chunks(binascii.unhexlify(mac), 4)]
+    states = [int.from_bytes(c, 'little') for c in util.chunks(mac, 4)]
 
     for i, c in zip('abcd', states):
         print('{} is {}'.format(i, hex(c)))
