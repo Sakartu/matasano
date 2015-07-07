@@ -808,7 +808,12 @@ def color_compare(string1, string2, each=1) -> str:
     return result
 
 
-def print_byte_dict(d) -> str:
+def print_timing_dict(d) -> str:
+    """
+    Print a bytes -> float dictionary. Convenience method for printing request-time dicts created in challenge 31.
+    :param d: The bytes -> float dictionary to print
+    :return: None
+    """
     print('{\n')
     for k, v in sorted(d.items()):
         print('\t{}: {:.06f}'.format(to_hex(k), v))

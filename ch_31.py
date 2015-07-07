@@ -92,7 +92,7 @@ def print_debug(sig, compare, req_times):
     print('PROBLEM:')
     print('sig:     {}'.format(util.to_hex(sig)))
     print('compare: {}'.format(util.to_hex(compare)))
-    pprint.pprint({util.to_hex(k): v for k, v in req_times.items()})
+    util.print_timing_dict(req_times)
     sys.exit(-1)
 
 
