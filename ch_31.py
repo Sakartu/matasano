@@ -73,21 +73,30 @@ def brute_byte(i, max_len, sig, f, compare):
         req_times[b] = req_time
         print_compare(s, compare, end='')
 
-    sig += pick_byte(req_times, max_len)
+    b = pick_byte(req_times, max_len)
+    if not b:
+        print_debug(sig, compare, req_times)
+
+    sig += b
+
     print_compare(sig, compare)
 
     # Debugging print, check if the signature so far is correct
     if sig[:i+1] != compare[:i+1]:
-        print('PROBLEM:')
-        print('sig:     {}'.format(util.to_hex(sig)))
-        print('compare: {}'.format(util.to_hex(compare)))
-        pprint.pprint({util.to_hex(k): v for k, v in req_times.items()})
-        sys.exit(-1)
+        print_debug(sig, compare, req_times)
 
     return sig
 
 
-def print_compare(s1, s2, end=''):
+def print_debug(sig, compare, req_times):
+    print('PROBLEM:')
+    print('sig:     {}'.format(util.to_hex(sig)))
+    print('compare: {}'.format(util.to_hex(compare)))
+    pprint.pprint({util.to_hex(k): v for k, v in req_times.items()})
+    sys.exit(-1)
+
+
+def print_compare(s1, s2, end='\n'):
     print('\r', util.color_compare(binascii.hexlify(s1).ljust(40, b'0'), binascii.hexlify(s2), 2), end=end)
 
 
