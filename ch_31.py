@@ -73,9 +73,9 @@ def brute_byte(i, max_len, sig, f, compare):
         req_times[b] = req_time
         print_compare(s, compare, end='')
 
-    b = pick_byte(req_times, max_len)
+    b, left, right, avg = pick_byte(req_times, max_len)
     if not b:
-        print_debug(sig, compare, req_times)
+        print_debug(sig, compare, left, right, avg, req_times)
 
     sig += b
 
@@ -83,15 +83,16 @@ def brute_byte(i, max_len, sig, f, compare):
 
     # Debugging print, check if the signature so far is correct
     if sig[:i+1] != compare[:i+1]:
-        print_debug(sig, compare, req_times)
+        print_debug(sig, compare, left, right, avg, req_times)
 
     return sig
 
 
-def print_debug(sig, compare, req_times):
+def print_debug(sig, compare, left, right, avg, req_times):
     print('PROBLEM:')
     print('sig:     {}'.format(util.to_hex(sig)))
     print('compare: {}'.format(util.to_hex(compare)))
+    print('left: {}, right: {}, avg: {}'.format(left, right, avg))
     util.print_timing_dict(req_times)
     sys.exit(-1)
 
@@ -107,7 +108,7 @@ def pick_byte(req_times, max_val):
     # Return the first (hopefully the only) value between left and right
     for k, v in req_times.items():
         if left <= v <= right:
-            return k
+            return k, left, right, avg
 
 
 def time_request(url, file, signature):
