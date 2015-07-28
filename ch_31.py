@@ -13,12 +13,14 @@ import statistics
 import time
 import sys
 import binascii
+import multiprocessing
 import requests
 import urllib.request
 import urllib.error
 import hmac
 
 import util
+import util.signature_server
 
 __author__ = 'peter'
 
@@ -157,21 +159,33 @@ def time_request(url, file, signature):
     return t1 - t0
 
 
-def main():
-    print('Testing SHA1 HMAC implementation')
-    for _ in range(1000):
-        k = util.get_random_bytes(random.randint(0, 100))
-        m = util.get_random_bytes(random.randint(0, 1000))
-        assert util.sha1_hmac(m, k) == hmac.new(k, m, hashlib.sha1).digest()
-    print('SHA1 HMAC implementation seems to perform correctly')
+def main(delay=0.05):
+    print('Starting server')
+    t = multiprocessing.Process(target=util.signature_server.main, kwargs={'argv': ['--delay', str(delay), '--quiet']})
+    t.daemon = True
+    t.start()
+    print('Server started with pid {}'.format(t.pid))
 
-    k = requests.get(KEY_URL).content
-    print('Secret key is', util.to_hex(k))
-    f = util.get_random_bytes(random.randint(10, 100))
-    print('Brute-forcing HMAC')
-    hm = find_hmac(f, k)
-    assert hm == util.sha1_hmac(f, k)
-    print('Signature for {} is {}!'.format(f, hm))
+    try:
+        print('Testing SHA1 HMAC implementation')
+        for _ in range(1000):
+            k = util.get_random_bytes(random.randint(0, 100))
+            m = util.get_random_bytes(random.randint(0, 1000))
+            assert util.sha1_hmac(m, k) == hmac.new(k, m, hashlib.sha1).digest()
+        print('SHA1 HMAC implementation seems to perform correctly')
+
+        k = requests.get(KEY_URL).content
+        print('Secret key is', util.to_hex(k))
+        f = util.get_random_bytes(random.randint(10, 100))
+        print('Brute-forcing HMAC')
+        hm = find_hmac(f, k)
+        assert hm == util.sha1_hmac(f, k)
+        print('Signature for {} is {}!'.format(f, hm))
+    finally:
+        print('Terminating server')
+        t.terminate()
+        t.join()
+        print('Server terminated')
 
 
 if __name__ == '__main__':

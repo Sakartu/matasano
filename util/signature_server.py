@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
 Usage:
-signature_server.py [--host HOST] [--port PORT] [--delay DELAY]
+signature_server.py [--host HOST] [--port PORT] [--delay DELAY] [--quiet]
 
 Options:
+--quiet             Do not print each request
 --host HOST         The host to bind the server to. [default: localhost]
 --port PORT         The port to bind the server to. [default: 9000]
 --delay DELAY       The artificial delay (in ms) between each comparison of bytes of the signature [default: 0.05]
@@ -40,8 +41,9 @@ def get_key():
 
 def insecure_compare(file, sig):
     s = util.sha1_hmac(file, KEY)
-    print(util.to_hex(sig))
-    print(util.to_hex(s))
+    if not quiet:
+        print(util.to_hex(sig))
+        print(util.to_hex(s))
     for b1, b2 in itertools.zip_longest(s, sig):
         if b1 != b2:
             return False
@@ -49,13 +51,18 @@ def insecure_compare(file, sig):
     return True
 
 
-if __name__ == '__main__':
-    args = docopt(__doc__)
-    global delay
+def main(argv=None):
+    args = docopt(__doc__, argv=argv)
+    global delay, quiet
 
     try:
         delay = float(args['--delay'])
+        quiet = args['--quiet']
     except ValueError:
         print('Provided delay "{}" is no valid float!'.format(args['--delay']))
         sys.exit(-1)
-    run(host=args['--host'], port=args['--port'])
+    run(host=args['--host'], port=args['--port'], quiet=args['--quiet'])
+
+
+if __name__ == '__main__':
+    main()
