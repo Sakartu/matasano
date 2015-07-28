@@ -1,16 +1,26 @@
 #!/usr/bin/env python3
+"""
+Usage:
+signature_server.py [--host HOST] [--port PORT] [--delay DELAY]
+
+Options:
+--host HOST         The host to bind the server to. [default: localhost]
+--port PORT         The port to bind the server to. [default: 9000]
+--delay DELAY       The artificial delay (in ms) between each comparison of bytes of the signature [default: 0.05]
+"""
 import base64
 import random
+from docopt import docopt
 from bottle import request, run, response, get
 import time
 import itertools
+import sys
 import util
 
 __author__ = 'peter'
 
 
 KEY = util.get_random_bytes(random.randint(0, 100))
-
 
 @get('/check_signature')
 def check_signature():
@@ -39,4 +49,13 @@ def insecure_compare(file, sig):
     return True
 
 
-run(host='localhost', port='9000')
+if __name__ == '__main__':
+    args = docopt(__doc__)
+    global delay
+
+    try:
+        delay = float(args['--delay'])
+    except ValueError:
+        print('Provided delay "{}" is no valid float!'.format(args['--delay']))
+        sys.exit(-1)
+    run(host=args['--host'], port=args['--port'])
