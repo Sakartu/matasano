@@ -180,7 +180,10 @@ def main(delay=0.05):
         print('Brute-forcing HMAC')
         hm = find_hmac(f, k)
         assert hm == util.sha1_hmac(f, k)
+        print('Successfully brute-forced HMAC')
         print('Signature for {} is {}!'.format(f, hm))
+    except AssertionError:
+        print('Found signature was not correct!')
     finally:
         print('Terminating server')
         t.terminate()
