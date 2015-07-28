@@ -814,7 +814,7 @@ def print_timing_dict(d) -> str:
     :param d: The bytes -> float dictionary to print
     :return: None
     """
-    print('{\n')
+    print('{')
     for k, v in sorted(d.items()):
         print('\t{}: {:.06f}'.format(to_hex(k), v))
-    print('\n}')
+    print('}')

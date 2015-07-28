@@ -73,9 +73,9 @@ def brute_byte(i, max_len, sig, f, compare):
         req_times[b] = req_time
         print_compare(s, compare, end='')
 
-    b, left, right, avg = pick_byte(req_times, max_len)
+    b, samples, left, right, avg = pick_byte(req_times, max_len)
     if not b:
-        print_debug(sig, compare, left, right, avg, req_times)
+        print_debug(sig, compare, samples, left, right, avg, req_times)
 
     sig += b
 
@@ -83,15 +83,16 @@ def brute_byte(i, max_len, sig, f, compare):
 
     # Debugging print, check if the signature so far is correct
     if sig[:i+1] != compare[:i+1]:
-        print_debug(sig, compare, left, right, avg, req_times)
+        print_debug(sig, compare, samples, left, right, avg, req_times)
 
     return sig
 
 
-def print_debug(sig, compare, left, right, avg, req_times):
-    print('PROBLEM:')
+def print_debug(sig, compare, samples, left, right, avg, req_times):
+    print('\nPROBLEM:')
     print('sig:     {}'.format(util.to_hex(sig)))
     print('compare: {}'.format(util.to_hex(compare)))
+    print('samples: {}'.format(samples))
     print('left: {}, right: {}, avg: {}'.format(left, right, avg))
     util.print_timing_dict(req_times)
     sys.exit(-1)
@@ -102,13 +103,42 @@ def print_compare(s1, s2, end='\n'):
 
 
 def pick_byte(req_times, max_val):
-    avg = statistics.mean(req_times.values())
-    left = avg + (0.5 * max_val)
-    right = avg + (1.5 * max_val)
-    # Return the first (hopefully the only) value between left and right
-    for k, v in req_times.items():
+    # We use a moving-window to calculate the desired left and right bounds for the request time.
+    # The window parameter is used to determine the number of counts
+    # See the documentation of local_avg.
+    window = 2
+    for i, (k, v) in enumerate(req_times.items()):
+        samples, avg = local_avg(list(req_times.values()), i, window)
+        left = avg + (0.5 * max_val)
+        right = avg + (1.5 * max_val)
         if left <= v <= right:
-            return k, left, right, avg
+            return k, samples, left, right, avg
+    return (None,)*5
+
+
+def local_avg(l, index, window) -> int:
+    """
+    Calculate the local average in list l around point index. All values between (index - window) and (index + window)
+    will be used in the sum. If one of the bounds lies outside the list, we will make sure we still take 2*window items,
+    but move the window slightly more to the left or right.
+    :param l: The list to take items from
+    :type l: list
+    :param index: The index around which we calculate the average
+    :type index: int
+    :param window: 2*window items around l[index] will be taken for the average
+    :type window: int
+    """
+    if index - window < 0:
+        left = 0
+        right = 2 * window
+    elif index + window > len(l):
+        left = len(l) - (2 * window)
+        right = len(l)
+    else:
+        left = index - window
+        right = index + window
+
+    return l[left:right], statistics.mean(l[left:right])
 
 
 def time_request(url, file, signature):
