@@ -79,17 +79,18 @@ def brute_byte(i, max_len, sig, f, compare):
 
     b, samples, left, right, avg = pick_byte(req_times, max_len)
     if not b:
-        print_debug(sig, compare, samples, left, right, avg, req_times)
+        print('\nMore than one valid byte found, retrying')
+        return brute_byte(i, max_len, sig, f, compare)
+    else:
+        sig += b
 
-    sig += b
+        print_compare(sig, compare)
 
-    print_compare(sig, compare)
+        # Debugging print, check if the signature so far is correct
+        if sig[:i+1] != compare[:i+1]:
+            print_debug(sig, compare, samples, left, right, avg, req_times)
 
-    # Debugging print, check if the signature so far is correct
-    if sig[:i+1] != compare[:i+1]:
-        print_debug(sig, compare, samples, left, right, avg, req_times)
-
-    return sig
+        return sig
 
 
 def print_debug(sig, compare, samples, left, right, avg, req_times):
@@ -119,9 +120,10 @@ def pick_byte(req_times, max_val):
         if left <= v <= right:
             diffs.append((abs(avg-v), k, samples, left, right, avg))
 
-    diffs = sorted(diffs, key=operator.itemgetter(0), reverse=True)
-
-    return diffs[0][1:] if diffs else (None,)*5
+    if not diffs or len(diffs) > 1:
+        return (None,)*5
+    else:
+        return list(sorted(diffs, key=operator.itemgetter(0), reverse=True))[0][1:]
 
 
 def local_avg(l, index, window) -> int:
