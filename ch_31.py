@@ -79,7 +79,6 @@ def brute_byte(i, max_len, sig, f, compare):
 
     b, samples, left, right, avg = pick_byte(req_times, max_len)
     if not b:
-        print('\nMore than one valid byte found, retrying')
         return brute_byte(i, max_len, sig, f, compare)
     else:
         sig += b
@@ -112,18 +111,23 @@ def pick_byte(req_times, max_val):
     # The window parameter is used to determine the number of counts
     # See the documentation of local_avg.
     window = 2
-    diffs = []
+    candidates = []
     for i, (k, v) in enumerate(req_times.items()):
         samples, avg = local_avg(list(req_times.values()), i, window)
         left = avg + (0.5 * max_val)
         right = avg + (1.5 * max_val)
         if left <= v <= right:
-            diffs.append((abs(avg-v), k, samples, left, right, avg))
+            candidates.append((abs(avg-v), k, samples, left, right, avg))
 
-    if not diffs or len(diffs) > 1:
-        return (None,)*5
-    else:
-        return list(sorted(diffs, key=operator.itemgetter(0), reverse=True))[0][1:]
+    if len(candidates) == 1:
+        return candidates[0][1:]
+
+    # If we have no candidates, or more than one, we don't know which to pick, so we return None
+    if not candidates:
+        print('\nNo valid bytes found, retrying')
+    if len(candidates) > 1:
+        print('\nMore than one valid byte found, retrying')
+    return (None,)*5
 
 
 def local_avg(l, index, window) -> int:
