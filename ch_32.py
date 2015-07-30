@@ -12,8 +12,7 @@ __author__ = 'peter'
 
 def main():
     # Start challenge 31 with a lower delay
-    ch_31.main(delay=0.005)
-
+    ch_31.main(delay=0.010)
 
 if __name__ == '__main__':
     main()

@@ -21,7 +21,7 @@ import util
 __author__ = 'peter'
 
 
-KEY = util.get_random_bytes(random.randint(0, 100))
+KEY = util.get_random_bytes(random.randint(10, 100))
 
 @get('/check_signature')
 def check_signature():
@@ -47,7 +47,7 @@ def insecure_compare(file, sig):
     for b1, b2 in itertools.zip_longest(s, sig):
         if b1 != b2:
             return False
-        time.sleep(0.05)
+        time.sleep(delay)
     return True
 
 

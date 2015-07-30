@@ -7,6 +7,7 @@ ch_29.py
 import base64
 from collections import defaultdict
 import hashlib
+import operator
 import pprint
 import random
 import statistics
@@ -34,7 +35,7 @@ def find_hmac(f, key):
     print('Determining best request duration length')
     # Determine best length
     lengths = defaultdict(list)
-    for _ in range(2):
+    for _ in range(10):
         for l in range(256):
             lengths[l.to_bytes(1, 'big')].append(time_request(SIG_URL, b'a', l.to_bytes(1, 'big')))
 
@@ -46,11 +47,12 @@ def find_hmac(f, key):
     avg = statistics.mean(vals)
     max_len = 0
     for v in vals:
-        if v > avg * 10:
+        if v > avg * 1.5:
             max_len = v - avg
 
     if not max_len:
-        pprint.pprint(lengths)
+        print('Signature should be: {}'.format(util.to_hex(util.sha1_hmac(b'a', key))))
+        util.print_timing_dict(lengths)
         print('Could not determine best request duration length!')
         return None
 
@@ -109,20 +111,24 @@ def pick_byte(req_times, max_val):
     # The window parameter is used to determine the number of counts
     # See the documentation of local_avg.
     window = 2
+    diffs = []
     for i, (k, v) in enumerate(req_times.items()):
         samples, avg = local_avg(list(req_times.values()), i, window)
         left = avg + (0.5 * max_val)
         right = avg + (1.5 * max_val)
         if left <= v <= right:
-            return k, samples, left, right, avg
-    return (None,)*5
+            diffs.append((abs(avg-v), k, samples, left, right, avg))
+
+    diffs = sorted(diffs, key=operator.itemgetter(0), reverse=True)
+
+    return diffs[0][1:] if diffs else (None,)*5
 
 
 def local_avg(l, index, window) -> int:
     """
     Calculate the local average in list l around point index. All values between (index - window) and (index + window)
-    will be used in the sum. If one of the bounds lies outside the list, we will make sure we still take 2*window items,
-    but move the window slightly more to the left or right.
+    will be used in the sum, but the value at index will be left out. If one of the bounds lies outside the list, we
+    will make sure we still take 2*window items, but move the window slightly more to the left or right.
     :param l: The list to take items from
     :type l: list
     :param index: The index around which we calculate the average
@@ -140,7 +146,7 @@ def local_avg(l, index, window) -> int:
         left = index - window
         right = index + window
 
-    return l[left:right], statistics.mean(l[left:right])
+    return l[left:right], statistics.mean(l[left:index] + l[index+1:right])
 
 
 def time_request(url, file, signature):
@@ -164,6 +170,7 @@ def main(delay=0.05):
     t = multiprocessing.Process(target=util.signature_server.main, kwargs={'argv': ['--delay', str(delay), '--quiet']})
     t.daemon = True
     t.start()
+    time.sleep(1)
     print('Server started with pid {}'.format(t.pid))
 
     try:
