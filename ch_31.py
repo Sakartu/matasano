@@ -75,7 +75,7 @@ def brute_byte(i, max_len, sig, f, compare):
         s = sig + b
         req_time = time_request(SIG_URL, f, s)
         req_times[b] = req_time
-        print_compare(s, compare, end='')
+        print_compare(s, compare)
 
     b, samples, left, right, avg = pick_byte(req_times, max_len)
     if not b:
@@ -84,7 +84,7 @@ def brute_byte(i, max_len, sig, f, compare):
     else:
         sig += b
 
-        print_compare(sig, compare)
+        print_compare(sig, compare, end='\n')
 
         # Debugging print, check if the signature so far is correct
         if sig[:i+1] != compare[:i+1]:
@@ -103,7 +103,7 @@ def print_debug(sig, compare, samples, left, right, avg, req_times):
     sys.exit(-1)
 
 
-def print_compare(s1, s2, end='\n'):
+def print_compare(s1, s2, end=''):
     print('\r', util.color_compare(binascii.hexlify(s1).ljust(40, b'0'), binascii.hexlify(s2), 2), end=end)
 
 
