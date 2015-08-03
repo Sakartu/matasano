@@ -818,3 +818,12 @@ def print_timing_dict(d) -> str:
     for k, v in sorted(d.items()):
         print('\t{}: {:.06f}'.format(to_hex(k), v))
     print('}')
+
+
+def dh_gen_keypair(p, g):
+    a = random.randint(0, p)
+    return a, pow(g, a, p)
+
+
+def dh_gen_session_key(p, priv, pub):
+    return pow(pub, priv, p)
