@@ -13,7 +13,7 @@ __author__ = 'peter'
 
 
 def main():
-    t0 = time.time
+    t0 = time.time()
     print('Testing Diffie-Hellman session key generation with simple params')
 
     if not test_pair(37, 5):
