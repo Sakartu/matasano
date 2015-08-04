@@ -6,10 +6,10 @@ import random
 import string
 import binascii
 import time
+import collections
 
 from Crypto import Random
 from Crypto.Cipher import AES
-import collections
 import colorama
 
 from exceptions import PaddingError, NotSeededError
@@ -21,7 +21,6 @@ FREQUENCIES = {
 }
 
 GLOBAL_KEY = Random.new().read(16)
-
 
 SHA1_BLOCKSIZE = 64
 MD4_BLOCKSIZE = 64
@@ -836,23 +835,27 @@ def dh_gen_session_key(p, priv, pub):
         return r.to_bytes(1, 'little')
 
 
-class EchoBot(object):
+class DHEchoBot(object):
     """
     A bot that sets up a Diffie-Hellman keypair, generates a session key, then uses the session key to communicate
     with party A.
     """
-    def __init__(self, p, g, other_pub):
+
+    def __init__(self, p, g):
         self.p = p
         self.g = g
-        self.own_priv, self.own_pub = dh_gen_keypair(self.p, self.g)
-        self.other_pub = other_pub
-        self.session_key = sha1(dh_gen_session_key(self.p, self.own_priv, self.other_pub))[:16]
+        self.own_pub, self.own_priv = None, None
+        self.session_key = None
 
-    def get_pub(self) -> int:
+    def init_session(self, other_pub) -> int:
         """
-        :return: The public key for this EchoBot
-        :rtype: int
+        Generate a session key using the given public key. This will also generate a DH keypair for this bot.
+        :param other_pub: The public key of the other party.
+        :type other_pub: int
+        :return: The generated public key for this bot
         """
+        self.own_priv, self.own_pub = dh_gen_keypair(self.p, self.g)
+        self.session_key = sha1(dh_gen_session_key(self.p, self.own_priv, other_pub))[:16]
         return self.own_pub
 
     def echo(self, msg) -> bytes:
@@ -868,9 +871,9 @@ class EchoBot(object):
         return aes_cbc_encrypt(pt, self.session_key, own_iv) + own_iv
 
 
-class MITMBot:
+class DHParameterInjectionBot:
     """
-    Why does this MITMBot (M) work?
+    Why does this DHParameterInjectionBot (M) work?
     We have the following scheme, with Alice (A) and Bob (B) trying to exchange keys, with M as MITM:
     A->M: (p, g, A)
     M->B: (p, g, p)   So M changes A into p
@@ -883,18 +886,15 @@ class MITMBot:
     Because the keys are always 0, M can read all messages!
 
     """
-    def __init__(self, p, g, other_pub):
+
+    def __init__(self, p, g):
         self.p = p
         self.g = g
         self.session_key = sha1(b'\x00')[:16]
-        self.other_pub = other_pub
-        self.target = EchoBot(p, g, p)
-        self.target_pub = self.target.get_pub()
+        self.target = DHEchoBot(p, g)
+        self.target_pub = self.target.init_session(p)
 
-    def get_pub(self) -> int:
-        """
-        :return: The public key for this MITMBot (which is p, so we can perform the MITM)
-        """
+    def init_session(self, _):
         return self.p
 
     def echo(self, msg) -> bytes:

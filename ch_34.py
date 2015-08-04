@@ -6,6 +6,7 @@ ch_33.py
 """
 import random
 import textwrap
+
 import util
 
 __author__ = 'peter'
@@ -29,22 +30,22 @@ def main():
     own_priv, own_pub = util.dh_gen_keypair(p, g)
 
     # Create a bot using only public parameters p, g and our own pub key
-    bot = util.EchoBot(p, g, own_pub)
+    bot = util.DHEchoBot(p, g)
 
     print('Testing encrypted message echo')
-    send_msg(p, own_priv, bot)
+    send_msg(p, own_priv, own_pub, bot)
     # We can now communicate securely
     print('Encrypted message echo works properly')
 
     print('Simulating MITM')
-    bot = util.MITMBot(p, g, own_pub)
-    send_msg(p, own_priv, bot)
+    bot = util.DHParameterInjectionBot(p, g)
+    send_msg(p, own_priv, own_pub, bot)
     print('MITM succeeded, successfully intercepted messages from A and B')
 
 
-def send_msg(p, own_priv, bot):
+def send_msg(p, own_priv, own_pub, bot):
     # Generate a session key using our own private key and the public key for the bot
-    session_key = util.sha1(util.dh_gen_session_key(p, own_priv, bot.get_pub()))[:16]
+    session_key = util.sha1(util.dh_gen_session_key(p, own_priv, bot.init_session(own_pub)))[:16]
 
     print('Making sure session keys correspond')
     # Check that the session key is the same for both parties
