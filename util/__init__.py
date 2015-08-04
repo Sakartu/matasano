@@ -514,9 +514,12 @@ def sha1(message, original_byte_len=None, state=(0x67452301, 0xEFCDAB89, 0x98BAD
     Found this at https://github.com/ajalt/python-sha1 and adapted to use more modern python3 constructs
 
     :param message: The input message string to hash.
+    :type message: bytes
     :param state: A five-tuple containing the values for the inner state h0 upto h4. defaults to
         (0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0)
+    :type state: tuple
     :param original_byte_len: A function to override the original_byte_len, used when tampering SHA hashes
+    :type original_byte_len: int
     :returns: A hex SHA-1 digest of the input message (without 0x prepended, like hexdigest() from hashlib)
     """
 
@@ -821,9 +824,96 @@ def print_timing_dict(d) -> str:
 
 
 def dh_gen_keypair(p, g):
-    a = random.randint(0, p)
+    a = random.randint(2, p)
     return a, pow(g, a, p)
 
 
 def dh_gen_session_key(p, priv, pub):
-    return pow(pub, priv, p)
+    r = pow(pub, priv, p)
+    if r:
+        return r.to_bytes((r.bit_length() + 7) // 8, 'little')
+    else:
+        return r.to_bytes(1, 'little')
+
+
+class EchoBot(object):
+    """
+    A bot that sets up a Diffie-Hellman keypair, generates a session key, then uses the session key to communicate
+    with party A.
+    """
+    def __init__(self, p, g, other_pub):
+        self.p = p
+        self.g = g
+        self.own_priv, self.own_pub = dh_gen_keypair(self.p, self.g)
+        self.other_pub = other_pub
+        self.session_key = sha1(dh_gen_session_key(self.p, self.own_priv, self.other_pub))[:16]
+
+    def get_pub(self) -> int:
+        """
+        :return: The public key for this EchoBot
+        :rtype: int
+        """
+        return self.own_pub
+
+    def echo(self, msg) -> bytes:
+        """
+        Print a decrypted version of the given message, then encrypt it using a different IV and return it.
+        :param msg: The message to decrypt, print and encrypt again
+        :return: The given msg, encrypted using a different IV
+        """
+        ct, iv = msg[:-16], msg[-16:]
+        pt = aes_cbc_decrypt(ct, self.session_key, iv)
+        print('B: Message is {}'.format(to_hex(pt)))
+        own_iv = get_random_bytes(16)
+        return aes_cbc_encrypt(pt, self.session_key, own_iv) + own_iv
+
+
+class MITMBot:
+    """
+    Why does this MITMBot (M) work?
+    We have the following scheme, with Alice (A) and Bob (B) trying to exchange keys, with M as MITM:
+    A->M: (p, g, A)
+    M->B: (p, g, p)   So M changes A into p
+                      The session key that B calculates is as follows:
+                      s = (b^p) % p = 0
+    B->M: (B)
+    M->A: (p)     So M changes B into p
+                  The session key that A calculates is as follows:
+                  s = (a^p) % p = 0
+    Because the keys are always 0, M can read all messages!
+
+    """
+    def __init__(self, p, g, other_pub):
+        self.p = p
+        self.g = g
+        self.session_key = sha1(b'\x00')[:16]
+        self.other_pub = other_pub
+        self.target = EchoBot(p, g, p)
+        self.target_pub = self.target.get_pub()
+
+    def get_pub(self) -> int:
+        """
+        :return: The public key for this MITMBot (which is p, so we can perform the MITM)
+        """
+        return self.p
+
+    def echo(self, msg) -> bytes:
+        """
+        Perform an echo MITM on a channel between the caller of echo (A) and the target bot (B). This echo can read
+        all messages sent to it by either A or B.
+
+        :param msg: The intercepted message. This will be printed decrypted, then sent on to B. The result from B will
+            be printed decrypted again, then sent back to A.
+        :type msg: bytes
+        :return: After the message is forwarded to B, the result from B will be sent back transparantly.
+        """
+        a_ct, a_iv = msg[:-16], msg[-16:]
+        a_pt = aes_cbc_decrypt(a_ct, self.session_key, a_iv)
+        print('M: Message is {}'.format(to_hex(a_pt)))
+        msg = self.target.echo(msg)
+        b_ct, b_iv = msg[:-16], msg[-16:]
+        b_pt = aes_cbc_decrypt(b_ct, self.session_key, b_iv)
+        print('M: Message is {}'.format(to_hex(b_pt)))
+        assert a_pt == b_pt
+        return msg
+
