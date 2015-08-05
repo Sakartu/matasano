@@ -13,6 +13,7 @@ from Crypto.Cipher import AES
 import colorama
 
 from exceptions import PaddingError, NotSeededError
+import exceptions
 
 FREQUENCIES = {
     'E': 0.1202, 'T': 0.091, 'A': 0.0812, 'O': 0.0768, 'I': 0.0731, 'N': 0.0695, 'S': 0.0628, 'R': 0.0602, 'H': 0.0592,
@@ -822,17 +823,47 @@ def print_timing_dict(d) -> str:
     print('}')
 
 
-def dh_gen_keypair(p, g):
+def dh_gen_keypair(p, g) -> int:
+    """
+    Generate a Diffie-Hellman keypair using the given parameters p and g.
+
+    :param p: The Diffie-Hellman paramter p
+    :type p: int
+    :param g: The Diffie-Hellman parameter g
+    :type g: int
+    :return: (g ** random.randint(2, p)) % p
+    """
     a = random.randint(2, p)
     return a, pow(g, a, p)
 
 
-def dh_gen_session_key(p, priv, pub):
-    r = pow(pub, priv, p)
-    if r:
-        return r.to_bytes((r.bit_length() + 7) // 8, 'little')
+def dh_gen_session_key(p, priv, pub) -> bytes:
+    """
+    Generate a session key given the parameter p and the private and public key. This basically calculates
+    sha1((pub ** priv) % p)[:16]
+    :param p: The Diffie-Hellman parameter p
+    :type p: int
+    :param priv: A Diffie-Hellman private key part
+    :type priv: int
+    :param pub: A Diffie-Hellman public key part
+    :type pub: int
+    :return: A session key, which is the first 16 bytes of the SHA1 hash of the Diffie-Hellman key generated with the
+        parameters above
+    """
+    return dh_key_to_bytes(pow(pub, priv, p))
+
+
+def dh_key_to_bytes(key) -> bytes:
+    """
+    Convert the given key to a usable session key of 16 bytes
+    :param key:
+    :type key: int
+    :return: the first 16 bytes of the SHA1 hash of the given key, converted to bytes.
+    """
+    if key:
+        return sha1(key.to_bytes((key.bit_length() + 7) // 8, 'little'))[:16]
     else:
-        return r.to_bytes(1, 'little')
+        return sha1(key.to_bytes(1, 'little'))[:16]
 
 
 class DHEchoBot(object):
@@ -855,7 +886,7 @@ class DHEchoBot(object):
         :return: The generated public key for this bot
         """
         self.own_priv, self.own_pub = dh_gen_keypair(self.p, self.g)
-        self.session_key = sha1(dh_gen_session_key(self.p, self.own_priv, other_pub))[:16]
+        self.session_key = dh_gen_session_key(self.p, self.own_priv, other_pub)
         return self.own_pub
 
     def echo(self, msg) -> bytes:
@@ -869,6 +900,20 @@ class DHEchoBot(object):
         print('B: Message is {}'.format(to_hex(pt)))
         own_iv = get_random_bytes(16)
         return aes_cbc_encrypt(pt, self.session_key, own_iv) + own_iv
+
+
+class DHNegotiatingEchoBot(DHEchoBot):
+    """
+    A bot that tries to agree on the (p,g) parameters, then uses those to set up a Diffie-Hellman keypair, generates a
+    session key, then uses the session key to communicate with party A.
+    """
+    def __init__(self):
+        super(DHNegotiatingEchoBot, self).__init__(None, None)
+
+    def negotiate_pg(self, p, g):
+        self.p = p
+        self.g = g
+        return p, g
 
 
 class DHParameterInjectionBot:
@@ -917,3 +962,38 @@ class DHParameterInjectionBot:
         assert a_pt == b_pt
         return msg
 
+
+class DHGTamperedGBot:
+    def __init__(self, tampered_g):
+        self.p = None
+        self.tampered_g = tampered_g
+
+        self.target = DHNegotiatingEchoBot()
+        self._keys = None
+
+    def negotiate_pg(self, p, _):
+        self.p = p
+        self._keys = {1: (dh_key_to_bytes(1),),
+                      p: (dh_key_to_bytes(0),),
+                      p - 1: (dh_key_to_bytes(1), dh_key_to_bytes(p - 1))}
+        return self.target.negotiate_pg(p, self.tampered_g)
+
+    @property
+    def session_keys(self):
+        return self._keys[self.tampered_g]
+
+    def init_session(self, other_pub):
+        target_pub = self.target.init_session(other_pub)
+        return target_pub
+
+    def echo(self, msg):
+        a_ct, a_iv = msg[:-16], msg[-16:]
+        for k in self.session_keys:
+            try:
+                print('M: Message is {}'.format(to_hex(aes_cbc_decrypt(a_ct, k, a_iv))))
+                break
+            except exceptions.PaddingError:
+                pass
+        else:
+            raise Exception('Could not MITM properly!')
+        return self.target.echo(msg)

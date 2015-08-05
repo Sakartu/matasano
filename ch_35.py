@@ -6,7 +6,7 @@ ch_33.py
 """
 import random
 import textwrap
-
+import sys
 import util
 
 __author__ = 'peter'
@@ -26,38 +26,39 @@ def main():
     fffffffffffff''').replace('\n', ''), 16)
     g = 2
 
+    print('Trying MITM for g = 1')
+    bot = util.DHGTamperedGBot(1)
+    try_mitm(p, g, bot)
+
+    print('Succeeded, trying for g = p')
+    bot = util.DHGTamperedGBot(p)
+    try_mitm(p, g, bot)
+
+    print('Succeeded, trying for g = p-1')
+    bot = util.DHGTamperedGBot(p-1)
+    try_mitm(p, g, bot)
+    print('All MITM\'s successful!')
+
+
+def try_mitm(p, g, bot):
+    p, g = bot.negotiate_pg(p, g)
+
     # Generate our own private and public key
     own_priv, own_pub = util.dh_gen_keypair(p, g)
 
-    # Create a bot using only public parameters p, g and our own pub key
-    bot = util.DHEchoBot(p, g)
+    other_pub = bot.init_session(own_pub)
+    session_key = util.dh_gen_session_key(p, own_priv, other_pub)
 
-    print('Testing encrypted message echo')
-    send_msg(p, own_priv, own_pub, bot)
-    # We can now communicate securely
-    print('Encrypted message echo works properly')
+    assert session_key == bot.target.session_key
+    assert session_key in bot.session_keys
 
-    print('Simulating MITM')
-    bot = util.DHParameterInjectionBot(p, g)
-    send_msg(p, own_priv, own_pub, bot)
-    print('MITM succeeded, successfully intercepted messages from A and B')
-
-
-def send_msg(p, own_priv, own_pub, bot):
-    # Generate a session key using our own private key and the public key for the bot
-    session_key = util.dh_gen_session_key(p, own_priv, bot.init_session(own_pub))
-
-    print('Making sure session keys correspond')
-    # Check that the session key is the same for both parties
-    assert session_key == bot.session_key
-    data = util.get_random_bytes(random.randint(10, 100))
+    data = util.get_random_bytes(random.randint(10, 50))
     print('A: Message is {}'.format(util.to_hex(data)))
     own_iv = util.get_random_bytes(16)
     ct = util.aes_cbc_encrypt(data, session_key, own_iv)
     msg = bot.echo(ct + own_iv)
     other_ct, other_iv = msg[:-16], msg[-16:]
     assert data == util.aes_cbc_decrypt(other_ct, session_key, other_iv)
-
 
 if __name__ == '__main__':
     main()
