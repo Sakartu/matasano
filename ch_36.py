@@ -15,7 +15,7 @@ __author__ = 'peter'
 # noinspection PyPep8Naming
 def main():
     print('Generating key(s) for SRP')
-    # Set p and g to the NIST specified parameters
+    # Set N to the NIST specified parameter
     N = int(textwrap.dedent('''
     ffffffffffffffffc90fdaa22168c234c4c6628b80dc1cd129024
     e088a67cc74020bbea63b139b22514a08798e3404ddef9519b3cd
