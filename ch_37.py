@@ -25,8 +25,8 @@ def main():
 
     log_in('password', N)
     log_in('password', N, '', 0)
-    log_in('password', N, '', N)
-    log_in('password', N, '', 2*N)
+    log_in('password', N, 'not used', N)
+    log_in('password', N, 'pwned', 2*N)
 
 
 # noinspection PyPep8Naming
@@ -56,6 +56,9 @@ def log_in(password, N, tampered_password=None, override_A=None):
         # Overriding the sent value A with 0 means that the Server's S value is always 0:
         # S = (A * v**u) ** b % N, with A=0 makes S=0
         # The same goes for N and 2N(because every calculation is modulo N
+        # This means that the password, which in the end is only used to compute v serverside and x clientside, is not
+        # used anymore to compute S, since it is always 0.
+        # This effectively means that we can login using any password we want :)
         S = 0
     else:
         S = pow(B - k * pow(g, x, N), a + u * x, N)
