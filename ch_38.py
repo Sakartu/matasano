@@ -5,6 +5,7 @@ Usage:
 ch_37.py
 """
 import hashlib
+import random
 import textwrap
 import util
 import hmac
@@ -23,16 +24,24 @@ def main():
     bb9ed529077096966d670c354e4abc9804f1746c08ca237327fff
     fffffffffffff''').replace('\n', ''), 16)
 
-    log_in('password', n)
+    print('Testing regular simplified SRP')
+    log_in('password', n, False)
+    print('\nTesting MITM')
+    # Pick a random password from the dict
+    log_in(random.choice([x.strip() for x in open('resources/wordlist.txt')]), n, True)
+    print('All tests passed')
 
 
 # noinspection PyPep8Naming
-def log_in(password, n):
+def log_in(password, n, mitm):
     print('Generating key(s) for SRP')
     # Set p and g to the NIST specified parameters
     g = 2
 
-    bot = util.SSRPBot(g, n, password)
+    if mitm:
+        bot = util.MITMSSRPBot(g, n, password)
+    else:
+        bot = util.SSRPBot(g, n, password)
 
     a, A = util.dh_gen_keypair(n, g)
 
@@ -42,12 +51,12 @@ def log_in(password, n):
     S = pow(B, a + u*x, n)
     K = hashlib.sha256(str(S).encode('utf8'))
 
-    print('Checking key')
+    print('C: Checking key')
     hmc = hmac.new(K.digest(), salt.encode('utf8'), hashlib.sha256).digest()
     if bot.check_key(hmc):
-        print('Keys are correct!')
+        print('C: Keys are correct!')
     else:
-        raise Exception('Keys do not correlate!')
+        raise Exception('C: Keys do not correlate!')
 
 
 if __name__ == '__main__':

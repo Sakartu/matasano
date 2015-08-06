@@ -3,6 +3,7 @@ import hashlib
 import hmac
 from itertools import cycle
 import math
+import multiprocessing
 from operator import itemgetter
 import random
 import string
@@ -13,6 +14,8 @@ import collections
 from Crypto import Random
 from Crypto.Cipher import AES
 import colorama
+import sys
+import functools
 
 from exceptions import PaddingError, NotSeededError
 import exceptions
@@ -1019,7 +1022,7 @@ class SRPBot:
     def __init__(self, N, g, k, P):
         """
         All these parameters are pre-agreed upon; they are passed through the constructor here just to keep them
-        stored in one place
+        stored in the challenge file instead of util
         """
         self.N = N
         self.g = g
@@ -1045,4 +1048,60 @@ class SRPBot:
 
     def check_key(self, hmc):
         return hmc == hmac.new(self.K.digest(), self.salt.encode('utf8'), hashlib.sha256).digest()
+
+
+# noinspection PyPep8Naming
+class SSRPBot:
+    def __init__(self, g, n, password):
+        """
+        All these parameters are pre-agreed upon; they are passed through the constructor here just to keep them
+        stored in the challenge file instead of util
+        """
+        self.g = g
+        self.n = n
+        self.salt = hex(random.randint(2, n))
+        self.x = hashlib.sha256((self.salt + password).encode('utf8'))
+        self.v = pow(g, int('0x' + self.x.hexdigest(), 16), n)
+        self.u = random.randint(2, 2**128)  # Random 128-bit number
+        self.b, self.B = None, None
+        self.S = None
+        self.K = None
+
+    def init_session(self, A):
+        self.b, self.B = dh_gen_keypair(self.n, self.g)
+        self.S = pow(A * pow(self.v, self.u, self.n), self.b, self.n)
+        self.K = hashlib.sha256(str(self.S).encode('utf8'))
+        return self.salt, self.B, self.u
+
+    def check_key(self, hmc):
+        return hmc == hmac.new(self.K.digest(), self.salt.encode('utf8'), hashlib.sha256).digest()
+
+
+# noinspection PyPep8Naming
+class MITMSSRPBot(SSRPBot):
+    def __init__(self, g, n, _):
+        # We don't need the password
+        super(MITMSSRPBot, self).__init__(g, n, '')
+        self.A = None
+
+    def init_session(self, A):
+        self.A = A
+        self.b, self.B = dh_gen_keypair(self.n, self.g)
+        return self.salt, self.B, self.u
+
+    # noinspection PyTypeChecker
+    def check_key(self, hmc):
+        print('S: Brute-forcing HMAC')
+        for idx, candidate in enumerate([x.strip() for x in open('resources/wordlist.txt')]):
+            if not idx % 1000:
+                sys.stdout.write('.')
+                sys.stdout.flush()
+            x = hashlib.sha256((self.salt + candidate).encode('utf8'))
+            v = pow(self.g, int('0x' + x.hexdigest(), 16), self.n)
+            S = pow(self.A * pow(v, self.u, self.n), self.b, self.n)
+            K = hashlib.sha256(str(S).encode('utf8'))
+            if hmc == hmac.new(K.digest(), self.salt.encode('utf8'), hashlib.sha256).digest():
+                print('S: password cracked: {}'.format(candidate))
+                break
+        return True
 
