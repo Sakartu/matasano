@@ -34,10 +34,14 @@ def main():
     a, A = util.dh_gen_keypair(N, g)
     salt, B = bot.init_session(A)
     u = int('0x' + hashlib.sha256((str(A) + str(B)).encode('utf8')).hexdigest(), 16)
+    assert u == bot.u
 
     x = int('0x' + hashlib.sha256((salt + P).encode('utf8')).hexdigest(), 16)
+    assert x == bot.x
 
     S = pow(B - k * pow(g, x, N), a + u * x, N)
+    assert S == bot.S
+
     K = hashlib.sha256(str(S).encode('utf8'))
     assert bot.K.hexdigest() == K.hexdigest()
 

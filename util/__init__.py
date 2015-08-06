@@ -1029,16 +1029,19 @@ class SRPBot:
         # We skip creating x and xH, because we don't need them afterwards
         self.x = int('0x' + hashlib.sha256((self.salt + P).encode('utf8')).hexdigest(), 16)
         self.v = pow(g, self.x, N)
+        self.b, self.B = None, None
+        self.u = None
+        self.S = None
         self.K = None
 
     def init_session(self, A):
-        b, B = dh_gen_keypair(self.N, self.g)
-        B = (self.k * self.v) + pow(self.g, b, self.N)
-        u = int('0x' + hashlib.sha256((str(A) + str(B)).encode('utf8')).hexdigest(), 16)
+        self.b, self.B = dh_gen_keypair(self.N, self.g)
+        self.B = (self.k * self.v) + pow(self.g, self.b, self.N)
+        self.u = int('0x' + hashlib.sha256((str(A) + str(self.B)).encode('utf8')).hexdigest(), 16)
 
-        S = pow(A * pow(self.v, u, self.N), b, self.N)
-        self.K = hashlib.sha256(str(S).encode('utf8'))
-        return self.salt, B
+        self.S = pow(A * pow(self.v, self.u, self.N), self.b, self.N)
+        self.K = hashlib.sha256(str(self.S).encode('utf8'))
+        return self.salt, self.B
 
     def check_key(self, hmc):
         return hmc == hmac.new(self.K.digest(), self.salt.encode('utf8'), hashlib.sha256).digest()
