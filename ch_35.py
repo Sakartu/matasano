@@ -2,7 +2,7 @@
 # -*- coding: utf8 -*-
 """
 Usage:
-ch_33.py
+ch_35.py
 """
 import random
 import textwrap

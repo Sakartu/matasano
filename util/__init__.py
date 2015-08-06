@@ -1,4 +1,6 @@
 from collections import defaultdict, OrderedDict
+import hashlib
+import hmac
 from itertools import cycle
 import math
 from operator import itemgetter
@@ -414,6 +416,19 @@ def test_password_reset_token(data, t) -> bool:
         if pt.endswith(b'PASSWORD TOKEN'):
             return True
     return False
+
+
+def generate_random_string(l=20, alphabet=string.ascii_letters + string.digits + string.punctuation) -> str:
+    """
+    Generate a random string of length l, with characters selected from the given alphabet
+    :param l: The length of the string to generate. Defaults to 20.
+    :type l: int
+    :param alphabet: The alphabet to pick characters from. Defaults to string.ascii_letters + string.digits +
+        string.punctuation
+    :type alphabet: str
+    :return: A string of length l containing randomly chosen characters from alphabet
+    """
+    return ''.join(random.choice(alphabet) for _ in range(l))
 
 
 def mt_encrypt(data, seed) -> bytes:
@@ -997,3 +1012,34 @@ class DHGTamperedGBot:
         else:
             raise Exception('Could not MITM properly!')
         return self.target.echo(msg)
+
+
+# noinspection PyPep8Naming
+class SRPBot:
+    def __init__(self, N, g, k, P):
+        """
+        All these parameters are pre-agreed upon; they are passed through the constructor here just to keep them
+        stored in one place
+        """
+        self.N = N
+        self.g = g
+        self.k = k
+        self.P = P
+        self.salt = hex(random.randint(2, N))
+        # We skip creating x and xH, because we don't need them afterwards
+        self.x = int('0x' + hashlib.sha256((self.salt + P).encode('utf8')).hexdigest(), 16)
+        self.v = pow(g, self.x, N)
+        self.K = None
+
+    def init_session(self, A):
+        b, B = dh_gen_keypair(self.N, self.g)
+        B = (self.k * self.v) + pow(self.g, b, self.N)
+        u = int('0x' + hashlib.sha256((str(A) + str(B)).encode('utf8')).hexdigest(), 16)
+
+        S = pow(A * pow(self.v, u, self.N), b, self.N)
+        self.K = hashlib.sha256(str(S).encode('utf8'))
+        return self.salt, B
+
+    def check_key(self, hmc):
+        return hmc == hmac.new(self.K.digest(), self.salt.encode('utf8'), hashlib.sha256).digest()
+
