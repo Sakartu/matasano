@@ -3,7 +3,6 @@ import hashlib
 import hmac
 from itertools import cycle
 import math
-import multiprocessing
 from operator import itemgetter
 import random
 import string
@@ -15,7 +14,7 @@ from Crypto import Random
 from Crypto.Cipher import AES
 import colorama
 import sys
-import functools
+import gensafeprime
 
 from exceptions import PaddingError, NotSeededError
 import exceptions
@@ -1105,3 +1104,104 @@ class MITMSSRPBot(SSRPBot):
                 break
         return True
 
+
+def get_random_prime(n=1024) -> int:
+    """
+    Use the gensafeprime module to return a safe prime of bitsize n
+    :param n: The bitsize to generate a prime for
+    :return: A prime of n bits
+    """
+    return gensafeprime.generate(n)
+
+
+def egcd(a, b):
+    """
+    An iterative version of the Extended Euclidean algorithm for computing the greatest common divider (gcd) of a and b
+    This algorithm was built using the pseudocode at https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
+    :param a: The first number to calculate the gcd for
+    :param b: The second number to calculate the gcd for
+    :return: The greatest common divider of a and b
+    """
+    s, olds = 0, 1
+    t, oldt = 1, 0
+    r, oldr = b, a
+    while r:
+        quotient = oldr // r
+        oldr, r = r, oldr - quotient * r
+        olds, s = s, olds - quotient * s
+        oldt, t = t, oldt - quotient * t
+    return oldr, olds, oldt
+
+
+def invmod(a, n):
+    """
+    Calculate the multiplicative inverse of a modulo n
+    :param a: The value to calculate the multiplicative inverse for
+    :param n: The modulo to use
+    :return: t such that a*t = 1 mod n or None if gcd(a, n) != 1
+    """
+    gcd, x, y = egcd(a, n)
+    return None if gcd != 1 else x % n
+
+
+def bytes_to_int(b):
+    """
+    Create an integer from the given bytes b. b can be any given bytes object. The python 3 functions
+    int.from_bytes and int.to_bytes are used for the conversion.
+    :param b: The bytes object to convert
+    :return: An integer representation of the given bytes b
+    """
+    return int.from_bytes(b, 'little')
+
+
+def str_to_int(s):
+    """
+    Create an integer from the given string s. s can be any given unicode string. The python 3 functions
+    int.from_bytes and int.to_bytes are used for the conversion. We assume utf8 encoding and little endianness.
+    :param s: The string to convert
+    :return: An integer representation of the given string s
+    """
+    return bytes_to_int(bytes(s, encoding='utf8'))
+
+
+def int_to_str(i):
+    """
+    Create a string from the given int i. i was assumed to have been created using str_to_int. The python 3 functions
+    int.from_bytes and int.to_bytes are used for the conversion. We assume utf8 encoding and little endianness.
+    :param i: The integer to convert
+    :return: A string representation of the given int i
+    """
+    return i.to_bytes((i.bit_length() + 7) // 8, 'little').decode('utf8')
+
+
+class RSA:
+    def __init__(self, n=1024):
+        """
+        This creates an RSA object with primes of the given bitlength
+        :param n: The bitlength for primes p and q
+        """
+        self.p, self.q = get_random_prime(n), get_random_prime(n)
+        self.n = self.p * self.q
+        self.et = (self.p-1)*(self.q-1)
+        self.e = 3
+        self.d = invmod(self.e, self.et)
+
+    @staticmethod
+    def normalize(m):
+        """
+        A normalization method for providing this RSA object with messages. All messages will be converted to integers
+        using the str_to_int and bytes_to_int functions.
+        :param m: This can either be a
+        :return:
+        """
+        if isinstance(m, str):
+            return str_to_int(m)
+        elif isinstance(m, bytes):
+            return bytes_to_int(m)
+        return m
+
+    def encrypt(self, m):
+        return pow(self.normalize(m), self.e, self.n)
+
+    def decrypt(self, ct):
+        return pow(ct, self.d, self.n)
