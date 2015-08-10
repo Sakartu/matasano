@@ -1107,7 +1107,8 @@ class MITMSSRPBot(SSRPBot):
 
 def get_random_prime(n=1024) -> int:
     """
-    Use the gensafeprime module to return a safe prime of bitsize n
+    Use the gensafeprime module to return a safe prime of bitsize n. A python 3 compatible module was created by me and
+    can be found at http://www.github.com/Sakartu/gensafeprime
     :param n: The bitsize to generate a prime for
     :return: A prime of n bits
     """
